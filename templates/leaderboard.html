@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnNest - Leaderboard</title>
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js');
+        });
+      }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: #4CAF50 !important;
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            color: #374151 !important;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: #4CAF50 !important;
+        }
+        
+        .leaderboard-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .leaderboard-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .leaderboard-header {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+        
+        .leaderboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .leaderboard-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .leaderboard-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .leaderboard-content {
+            padding: 40px 30px;
+        }
+        
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+        }
+        
+        .leaderboard-table th {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #1e3a8a;
+            font-weight: 600;
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 0.95rem;
+        }
+        
+        .leaderboard-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        
+        .leaderboard-table tr:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .rank-cell {
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-align: center;
+            width: 80px;
+        }
+        
+        .rank-1 {
+            color: #fbbf24;
+        }
+        
+        .rank-2 {
+            color: #9ca3af;
+        }
+        
+        .rank-3 {
+            color: #d97706;
+        }
+        
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e2e8f0;
+            transition: transform 0.3s ease;
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.1);
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 1rem;
+        }
+        
+        .user-username {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .points-cell {
+            font-weight: 600;
+            color: #059669;
+            font-size: 1.1rem;
+        }
+        
+        .badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .badge {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #92400e;
+            border-radius: 16px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .medal-icon {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+        
+        .rank-1 .medal-icon {
+            color: #fbbf24;
+        }
+        
+        .rank-2 .medal-icon {
+            color: #9ca3af;
+        }
+        
+        .rank-3 .medal-icon {
+            color: #d97706;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .leaderboard-container {
+                margin: 20px auto;
+                padding: 0 15px;
+            }
+            
+            .leaderboard-header {
+                padding: 30px 20px;
+            }
+            
+            .leaderboard-content {
+                padding: 30px 20px;
+            }
+            
+            .leaderboard-title {
+                font-size: 2rem;
+            }
+            
+            .leaderboard-table th,
+            .leaderboard-table td {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+            
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="LearnNest Logo">
+                LearnNest
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/user_directory"><i class="fa fa-users"></i> Users</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/notifications"><i class="fa fa-bell"></i> Notifications</a></li>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.role == 'creator' %}
+                            <li class="nav-item"><a class="nav-link" href="/create_course"><i class="fa fa-plus"></i> Create Course</a></li>
+                        {% endif %}
+                        <li class="nav-item"><a class="nav-link" href="/logout"><i class="fa fa-sign-out-alt"></i> Logout</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/profile"><img src="/{{ current_user.avatar if current_user.avatar else 'static/default_avatar.png' }}" alt="avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;"> {{ current_user.username }}</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="/login"><i class="fa fa-sign-in-alt"></i> Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/register"><i class="fa fa-user-plus"></i> Register</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="leaderboard-container">
+        <div class="leaderboard-card">
+            <!-- Leaderboard Header -->
+            <div class="leaderboard-header">
+                <div class="leaderboard-title">
+                    <i class="fas fa-trophy"></i> Leaderboard
+                </div>
+                <div class="leaderboard-subtitle">
+                    Top performers and achievements
+                </div>
+            </div>
+
+            <!-- Leaderboard Content -->
+            <div class="leaderboard-content">
+                {% if users %}
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th class="rank-cell">Rank</th>
+                            <th>User</th>
+                            <th>Points</th>
+                            <th>Badges</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            {% for user in users %}
+                <tr>
+                            <td class="rank-cell rank-{{ loop.index if loop.index <= 3 else 'other' }}">
+                                {% if loop.index == 1 %}
+                                    <i class="fas fa-medal medal-icon"></i>1st
+                                {% elif loop.index == 2 %}
+                                    <i class="fas fa-medal medal-icon"></i>2nd
+                                {% elif loop.index == 3 %}
+                                    <i class="fas fa-medal medal-icon"></i>3rd
+                                {% else %}
+                                    #{{ loop.index }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="user-cell">
+                                    <img src="/{{ user[2] if user[2] else 'static/default_avatar.png' }}" alt="Avatar" class="user-avatar">
+                                    <div class="user-info">
+                                        <div class="user-name">{{ user[1] or user[0] }}</div>
+                                        <div class="user-username">@{{ user[0] }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="points-cell">{{ user[2] or 0 }}</td>
+                            <td>
+                                {% if user[3] %}
+                                    <div class="badge-container">
+                                        {% for badge in user[3].split(',') if badge %}
+                                            <span class="badge">
+                                                <i class="fas fa-trophy"></i>
+                                                {{ badge }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span style="color: #9ca3af; font-style: italic;">No badges yet</span>
+                                {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+                    </tbody>
+        </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-trophy"></i>
+                    <h3>No users found</h3>
+                    <p>Be the first to earn points and climb the leaderboard!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

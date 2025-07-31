@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Directory</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+        main { max-width: 700px; margin: 40px auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); padding: 24px; }
+        h1 { margin-top: 0; }
+        .user-list { margin-top: 20px; }
+        .user-card { display: flex; align-items: center; background: #fafafa; border-radius: 6px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; margin-right: 16px; }
+        .info { flex: 1; }
+        .display-name { font-weight: bold; font-size: 1.1em; color: #4CAF50; }
+        .username { color: #888; font-size: 0.95em; }
+        .bio { margin: 4px 0; color: #444; }
+        .role { font-size: 0.9em; color: #888; }
+        .profile-link { color: #2196F3; text-decoration: none; font-weight: bold; }
+        .profile-link:hover { text-decoration: underline; }
+        #user-search { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin-bottom: 16px; font-size: 1em; }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>User Directory</h1>
+        <input type="text" id="user-search" placeholder="Search users by name, username, or bio...">
+        <div class="user-list" id="user-list">
+            {% for user in users %}
+            <div class="user-card">
+                <img src="/{{ user[2] if user[2] else 'static/default_avatar.png' }}" alt="avatar" class="avatar">
+                <div class="info">
+                    <div class="display-name">{{ user[1] or user[0] }}</div>
+                    <div class="username">@{{ user[0] }}</div>
+                    <div class="bio">{{ user[3] }}</div>
+                    <div class="role">{{ user[4]|capitalize }}</div>
+                </div>
+                <a href="/profile?user={{ user[0] }}" class="profile-link">View Profile</a>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+    <script>
+        const searchInput = document.getElementById('user-search');
+        const userCards = document.querySelectorAll('.user-card');
+        searchInput.addEventListener('input', function() {
+            const query = searchInput.value.toLowerCase();
+            userCards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+    </script>
+</body>
+</html> 

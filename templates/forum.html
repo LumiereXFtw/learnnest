@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnNest - Course Forum</title>
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js');
+        });
+      }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: #4CAF50 !important;
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            color: #374151 !important;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: #4CAF50 !important;
+        }
+        
+        .forum-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .forum-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .forum-header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+        
+        .forum-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .forum-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .forum-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .forum-content {
+            padding: 40px 30px;
+        }
+        
+        .create-thread-section {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .form-control {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+        }
+        
+        .form-control:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+            outline: none;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn-outline-primary {
+            background: transparent;
+            color: #3b82f6;
+            border: 1px solid #3b82f6;
+        }
+        
+        .btn-outline-primary:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .thread-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .thread-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .thread-card:hover .thread-actions {
+            opacity: 1;
+        }
+        
+        .thread-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+        
+        .post-item {
+            padding: 20px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.3s ease;
+            position: relative;
+        }
+        
+        .post-item:hover {
+            background: #f8fafc;
+        }
+        
+        .post-item:hover .quick-reply-btn {
+            opacity: 1;
+        }
+        
+        .quick-reply-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+        
+        .post-item:last-child {
+            border-bottom: none;
+        }
+        
+        .thread-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .thread-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        
+        .thread-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .thread-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .post-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .post-author-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+        }
+        
+        .ai-author {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .user-author {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+        
+        .post-content {
+            line-height: 1.6;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+        
+        .reply-form {
+            display: none;
+            padding: 20px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .reply-form.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .ai-feedback-container {
+            background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+            border: 1px solid #10b981;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+            color: #065f46;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: #374151;
+        }
+        
+        .empty-state p {
+            margin: 0;
+            font-size: 0.95rem;
+        }
+        
+        .flash-messages {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        
+        .flash-messages li {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #78350f;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .ai-feedback-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .ai-feedback-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90vw;
+            max-height: 80vh;
+            overflow: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .ai-feedback-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .loading-dots::after {
+            content: '';
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+        
+        @media (max-width: 768px) {
+            .forum-container {
+                margin: 20px auto;
+                padding: 0 15px;
+            }
+            
+            .forum-header {
+                padding: 30px 20px;
+            }
+            
+            .forum-content {
+                padding: 30px 20px;
+            }
+            
+            .forum-title {
+                font-size: 2rem;
+            }
+            
+            .thread-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .post-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="/home">
+                <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="LearnNest Logo">
+                LearnNest
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/user_directory"><i class="fa fa-users"></i> Users</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/leaderboard"><i class="fa fa-trophy"></i> Leaderboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/notifications"><i class="fa fa-bell"></i> Notifications</a></li>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.role == 'creator' %}
+                            <li class="nav-item"><a class="nav-link" href="/create_course"><i class="fa fa-plus"></i> Create Course</a></li>
+                        {% endif %}
+                        <li class="nav-item"><a class="nav-link" href="/logout"><i class="fa fa-sign-out-alt"></i> Logout</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/profile"><img src="/{{ current_user.avatar if current_user.avatar else 'static/default_avatar.png' }}" alt="avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;"> {{ current_user.username }}</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="/login"><i class="fa fa-sign-in-alt"></i> Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/register"><i class="fa fa-user-plus"></i> Register</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="forum-container">
+        <div class="forum-card">
+            <!-- Forum Header -->
+            <div class="forum-header">
+                <div class="forum-title">
+                    <i class="fas fa-comments"></i> Course Forum
+                </div>
+                <div class="forum-subtitle">
+                    Discuss, ask questions, and share knowledge with your classmates
+                </div>
+            </div>
+
+            <!-- Forum Content -->
+            <div class="forum-content">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <ul class="flash-messages">
+                            {% for message in messages %}
+                                <li>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Create New Thread Section -->
+                <div class="create-thread-section">
+                    <div class="section-title">
+                        <i class="fas fa-plus-circle"></i>
+                        Start a New Discussion
+                    </div>
+                    <form id="thread-form">
+                        <input type="hidden" name="csrf_token" id="csrf_token" value="{{ csrf_token() }}">
+                        <div class="form-group">
+                            <label for="title" class="form-label">Discussion Title</label>
+                            <input type="text" id="title" name="title" class="form-control" placeholder="What would you like to discuss? (e.g., 'Help with Python loops', 'Question about assignment 3')" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="content" class="form-label">Your Question or Topic</label>
+                            <textarea id="content" name="content" rows="4" class="form-control" placeholder="Share your question, problem, or topic you'd like to discuss with your classmates. Be specific and clear to get better responses!" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="ext_url" class="form-label">Related Link (Optional)</label>
+                            <input type="url" id="ext_url" name="ext_url" class="form-control" placeholder="https://example.com (YouTube, Google Docs, PDF, etc.)">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                            Start Discussion
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Threads Section -->
+                <div class="section-title">
+                    <i class="fas fa-list"></i>
+                    Active Discussions
+                </div>
+                <div id="threads-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Feedback Modal -->
+    <div id="ai-feedback-modal" class="ai-feedback-modal">
+        <div class="ai-feedback-content">
+            <div class="ai-feedback-header">
+                <i class="fas fa-robot fa-2x" style="color: #10b981;"></i>
+                <h3 style="margin: 0;">AI Feedback</h3>
+            </div>
+            <div id="ai-feedback-content"></div>
+            <button onclick="closeAIFeedbackModal()" class="btn btn-primary" style="margin-top: 20px;">
+                <i class="fas fa-times"></i>
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Set global variables for permissions FIRST
+        window.canDeleteThread = {{ 'true' if current_user.is_authenticated and current_user.role == 'creator' else 'false' }};
+        window.currentUserId = {{ current_user.id|tojson }};
+        window.currentUserRole = {{ current_user.role|tojson }};
+        window.currentUsername = {{ current_user.username|tojson }};
+        
+        // Permission checking functions - define these after global variables
+        window.canEditThread = function(thread) {
+            return window.currentUserId === thread.creator_id || 
+                   window.currentUserRole === 'creator' || 
+                   window.currentUsername === 'creator1';
+        };
+        
+        window.canDeleteThread = function(thread) {
+            return window.currentUserId === thread.creator_id || 
+                   window.currentUserRole === 'creator' || 
+                   window.currentUsername === 'creator1';
+        };
+        
+        window.canEditPost = function(post) {
+            return window.currentUserId === post.user_id || 
+                   window.currentUserRole === 'creator' || 
+                   window.currentUsername === 'creator1';
+        };
+        
+        window.canDeletePost = function(post) {
+            return window.currentUserId === post.user_id || 
+                   window.currentUserRole === 'creator' || 
+                   window.currentUsername === 'creator1';
+        };
+        
+        const courseId = {{ course_id|tojson }};
+        const socket = io();
+        let currentReplyThreadId = null;
+
+        function showToast(msg, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = `show alert alert-${type}`;
+            setTimeout(() => { 
+                toast.className = toast.className.replace('show', ''); 
+            }, 3500);
+        }
+
+        function maskEnrollmentNumber(enrollment) {
+            if (!enrollment || enrollment.length < 5) return enrollment;
+            return enrollment.slice(0,2) + '*'.repeat(enrollment.length-4) + enrollment.slice(-2);
+        }
+
+        function confirmThreadDeletion(event) {
+            if (!confirm('Are you sure you want to delete this thread? This will also delete all posts in it.')) {
+                event.preventDefault();
+            }
+        }
+
+        function confirmPostDeletion(event) {
+            if (!confirm('Are you sure you want to delete this post?')) {
+                event.preventDefault();
+            }
+        }
+
+        // Fetch threads from backend
+        async function fetchThreads() {
+            try {
+                const res = await fetch(`/api/course/${courseId}/forum_data`);
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+                const data = await res.json();
+                renderThreads(data.threads);
+            } catch (e) {
+                console.error('Error fetching threads:', e);
+                document.getElementById('threads-container').innerHTML = `<div class='alert alert-danger'>Failed to load threads: ${e.message}</div>`;
+            }
+        }
+
+        // Socket event listeners
+        socket.on('new_notification', function(data) {
+            showToast('🔔 ' + data.message, 'info');
+            // Don't auto-refresh on notifications to avoid closing forms
+        });
+
+        // Render threads function with enhanced UI
+        function renderThreads(threads) {
+            const threadsContainer = document.getElementById('threads-container');
+            if (!threads || threads.length === 0) {
+                threadsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <h3>No threads yet</h3>
+                        <p>Be the first to start a discussion!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            threadsContainer.innerHTML = '';
+            threads.forEach(function(item) {
+                const thread = item.thread;
+                const posts = item.posts;
+                
+                let threadHtml = `
+                    <div class="thread-card">
+                        <div class="thread-header">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div style="flex: 1;">
+                                    <div class="thread-title">${thread.title}</div>
+                                    <div class="thread-meta">
+                                        <span><i class="fas fa-user"></i> ${thread.creator_display_name || maskEnrollmentNumber(thread.creator_username)}</span>
+                                        <span><i class="fas fa-clock"></i> ${formatDate(thread.created_at)}</span>
+                                        <span><i class="fas fa-comments"></i> ${posts.length} posts</span>
+                                    </div>
+                                </div>
+                                <div class="thread-actions">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="getAIFeedbackForThread(${thread.id})">
+                                        <i class="fas fa-robot"></i> AI Analysis
+                                    </button>
+                                    <button class="btn btn-success btn-sm" onclick="toggleReplyForm(${thread.id})">
+                                        <i class="fas fa-reply"></i> Reply
+                                    </button>
+                                    ${canEditThread(thread) ? `
+                                    <a href="/course/${courseId}/thread/${thread.id}/edit" class="btn btn-outline-warning btn-sm">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    ` : ''}
+                                    ${canDeleteThread(thread) ? `
+                                    <form method="POST" action="/course/${courseId}/thread/${thread.id}/delete" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this thread? This will also delete all posts in it.');">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body" style="padding: 0;">
+                `;
+                
+                // Display thread content as the first post
+                if (thread.content) {
+                    threadHtml += `
+                        <div class="post-item" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-bottom: 2px solid #cbd5e1;">
+                            <div class="post-header">
+                                <div class="post-author">
+                                    <div class="post-author-icon user-author">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <strong>${thread.creator_display_name || maskEnrollmentNumber(thread.creator_username)}</strong>
+                                        <div style="font-size: 0.85rem; color: #64748b;">${formatDate(thread.created_at)} (Original Post)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="post-content">${formatContent(thread.content)}</div>
+                        </div>
+                    `;
+                }
+                
+                // Display all replies
+                posts.forEach(function(post, index) {
+                    const postClass = 'post-item';
+                    const authorIconClass = 'user-author';
+                    const authorIcon = '<i class="fas fa-user"></i>';
+                    const authorName = post.display_name || maskEnrollmentNumber(post.enrollment_number);
+                    
+                    threadHtml += `
+                        <div class="${postClass}">
+                            <div class="post-header">
+                                <div class="post-author">
+                                    <div class="post-author-icon ${authorIconClass}">
+                                        ${authorIcon}
+                                    </div>
+                                    <div>
+                                        <strong>${authorName}</strong>
+                                        <div style="font-size: 0.85rem; color: #64748b;">${formatDate(post.created_at)}</div>
+                                    </div>
+                                </div>
+                                <div class="post-actions">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="getAIFeedbackForPost('${escapeHtml(post.content)}')">
+                                        <i class="fas fa-robot"></i> AI Feedback
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm" onclick="togglePostReplyForm(${thread.id}, ${post.id})">
+                                        <i class="fas fa-reply"></i> Reply
+                                    </button>
+                                    ${canEditPost(post) ? `
+                                    <a href="/course/${courseId}/post/${post.id}/edit" class="btn btn-outline-warning btn-sm">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    ` : ''}
+                                    ${canDeletePost(post) ? `
+                                    <form method="POST" action="/course/${courseId}/post/${post.id}/delete" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this post?');">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <div class="post-content">${formatContent(post.content)}</div>
+                            <div id="post-reply-form-${thread.id}-${post.id}" class="post-reply-form" style="display: none; margin-top: 16px; padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #10b981;">
+                                <div class="section-title" style="font-size: 1rem; margin-bottom: 12px; color: #065f46;">
+                                    <i class="fas fa-reply"></i> Reply to this post
+                                </div>
+                                <form onsubmit="submitPostReply(event, ${thread.id}, ${post.id})">
+                                    <div class="form-group">
+                                        <textarea name="reply_content" rows="2" class="form-control" placeholder="Reply to this post..." required></textarea>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="fas fa-paper-plane"></i> Post Reply
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="togglePostReplyForm(${thread.id}, ${post.id})">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                threadHtml += `
+                        </div>
+                        <div id="reply-form-${thread.id}" class="reply-form">
+                            <div class="section-title" style="font-size: 1.1rem; margin-bottom: 16px;">
+                                <i class="fas fa-reply"></i> Reply to Thread
+                            </div>
+                            <form onsubmit="submitReply(event, ${thread.id})">
+                                <div class="form-group">
+                                    <textarea name="reply_content" rows="3" class="form-control" placeholder="Share your solution, thoughts, or questions..." required></textarea>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-paper-plane"></i> Post Reply
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleReplyForm(${thread.id})">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+                
+                threadsContainer.innerHTML += threadHtml;
+            });
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+        
+        function formatContent(content) {
+            return content.replace(/\n/g, '<br>');
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/'/g, '&#39;');
+        }
+        
+        // Toggle reply form
+        function toggleReplyForm(threadId) {
+            const form = document.getElementById(`reply-form-${threadId}`);
+            if (form.classList.contains('show')) {
+                form.classList.remove('show');
+                currentReplyThreadId = null;
+            } else {
+                document.querySelectorAll('.reply-form.show').forEach(f => f.classList.remove('show'));
+                form.classList.add('show');
+                currentReplyThreadId = threadId;
+                form.querySelector('textarea').focus();
+            }
+        }
+        
+        // Submit reply
+        async function submitReply(event, threadId) {
+            event.preventDefault();
+            const form = event.target;
+            const content = form.reply_content.value.trim();
+            if (!content) return;
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+            submitBtn.disabled = true;
+            
+            try {
+                const res = await fetch(`/course/${courseId}/thread/${threadId}/post`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.getElementById('csrf_token').value
+                    },
+                    body: new URLSearchParams({
+                        content: content,
+                        csrf_token: document.getElementById('csrf_token').value
+                    })
+                });
+                
+                if (res.ok) {
+                    showToast('Reply posted successfully!', 'success');
+                    
+                    // Show refresh loading indicator
+                    showRefreshLoading();
+                    
+                    // Refresh the entire page
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000); // 1 second delay to show the loading indicator
+                } else {
+                    showToast('Failed to post reply.', 'danger');
+                }
+            } catch (e) {
+                showToast('Failed to post reply.', 'danger');
+            } finally {
+                // Restore button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+        
+        // Toggle post reply form
+        function togglePostReplyForm(threadId, postId) {
+            const form = document.getElementById(`post-reply-form-${threadId}-${postId}`);
+            if (form.style.display === 'none') {
+                // Close all other post reply forms
+                document.querySelectorAll('.post-reply-form').forEach(f => {
+                    f.style.display = 'none';
+                });
+                form.style.display = 'block';
+                form.querySelector('textarea').focus();
+            } else {
+                form.style.display = 'none';
+            }
+        }
+        
+        // Submit post reply
+        async function submitPostReply(event, threadId, postId) {
+            event.preventDefault();
+            const form = event.target;
+            const content = form.reply_content.value.trim();
+            if (!content) return;
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+            submitBtn.disabled = true;
+            
+            try {
+                const res = await fetch(`/course/${courseId}/thread/${threadId}/post`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.getElementById('csrf_token').value
+                    },
+                    body: new URLSearchParams({
+                        content: content,
+                        csrf_token: document.getElementById('csrf_token').value
+                    })
+                });
+                
+                if (res.ok) {
+                    showToast('Reply posted successfully!', 'success');
+                    
+                    // Show refresh loading indicator
+                    showRefreshLoading();
+                    
+                    // Refresh the entire page
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000); // 1 second delay to show the loading indicator
+                } else {
+                    showToast('Failed to post reply.', 'danger');
+                }
+            } catch (e) {
+                showToast('Failed to post reply.', 'danger');
+            } finally {
+                // Restore button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+        
+        // Refresh threads while keeping reply forms open
+        async function refreshThreadsKeepForms() {
+            try {
+                const res = await fetch(`/api/course/${courseId}/forum_data`);
+                const data = await res.json();
+                
+                // Store which forms were open and their content
+                const openThreadForms = [];
+                const openPostForms = [];
+                
+                document.querySelectorAll('.reply-form.show').forEach(form => {
+                    const threadId = form.id.replace('reply-form-', '');
+                    const textarea = form.querySelector('textarea');
+                    openThreadForms.push({
+                        threadId: threadId,
+                        content: textarea ? textarea.value : ''
+                    });
+                });
+                
+                document.querySelectorAll('.post-reply-form').forEach(form => {
+                    if (form.style.display !== 'none') {
+                        const id = form.id.replace('post-reply-form-', '');
+                        const [threadId, postId] = id.split('-');
+                        const textarea = form.querySelector('textarea');
+                        openPostForms.push({
+                            threadId: threadId,
+                            postId: postId,
+                            content: textarea ? textarea.value : ''
+                        });
+                    }
+                });
+                
+                // Re-render threads
+                renderThreads(data.threads);
+                
+                // Re-open forms that were open and restore their content
+                setTimeout(() => {
+                    openThreadForms.forEach(({threadId, content}) => {
+                        const form = document.getElementById(`reply-form-${threadId}`);
+                        if (form) {
+                            form.classList.add('show');
+                            const textarea = form.querySelector('textarea');
+                            if (textarea) {
+                                textarea.value = content;
+                                textarea.focus();
+                            }
+                        }
+                    });
+                    
+                    openPostForms.forEach(({threadId, postId, content}) => {
+                        const form = document.getElementById(`post-reply-form-${threadId}-${postId}`);
+                        if (form) {
+                            form.style.display = 'block';
+                            const textarea = form.querySelector('textarea');
+                            if (textarea) {
+                                textarea.value = content;
+                                textarea.focus();
+                            }
+                        }
+                    });
+                }, 100); // Small delay to ensure DOM is ready
+            } catch (e) {
+                console.error('Failed to refresh threads:', e);
+            }
+        }
+        
+        // Create new thread
+        document.getElementById('thread-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const title = document.getElementById('title').value.trim();
+            const content = document.getElementById('content').value.trim();
+            if (!title || !content) return;
+            
+            try {
+                const res = await fetch(`/course/${courseId}/forum`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.getElementById('csrf_token').value
+                    },
+                    body: new URLSearchParams({
+                        title: title,
+                        content: content,
+                        csrf_token: document.getElementById('csrf_token').value
+                    })
+                });
+                
+                if (res.ok) {
+                    showToast('Thread created successfully!', 'success');
+                    fetchThreads();
+                } else {
+                    showToast('Failed to create thread.', 'danger');
+                }
+            } catch (e) {
+                showToast('Failed to create thread.', 'danger');
+            }
+            
+            this.reset();
+        });
+        
+        // AI Feedback functions
+        function getAIFeedbackForThread(threadId) {
+            showAIFeedbackModal();
+            document.getElementById('ai-feedback-content').innerHTML = `
+                <div class="text-center py-3">
+                    <i class="fas fa-robot fa-2x" style="color: #10b981; margin-bottom: 16px;"></i>
+                    <h6>Analyzing entire thread with Gemini 2.0 Flash<span class="loading-dots"></span></h6>
+                </div>
+            `;
+            
+            fetch('/ai_feedback_thread', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ thread_id: threadId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('ai-feedback-content').innerHTML = `
+                    <div class="ai-feedback-container">${data.feedback}</div>
+                `;
+            })
+            .catch(() => {
+                document.getElementById('ai-feedback-content').innerHTML = `<div class='alert alert-danger'>Failed to get AI feedback.</div>`;
+            });
+        }
+        
+        function getAIFeedbackForPost(content) {
+            if (!content || typeof content !== 'string' || !content.trim()) {
+                showToast('Cannot get AI feedback for empty content.', 'danger');
+                return;
+            }
+            showAIFeedbackModal();
+            document.getElementById('ai-feedback-content').innerHTML = `
+                <div class="text-center py-3">
+                    <i class="fas fa-robot fa-2x" style="color: #10b981; margin-bottom: 16px;"></i>
+                    <h6>Analyzing post with Gemini 2.0 Flash<span class="loading-dots"></span></h6>
+                </div>
+            `;
+            
+            fetch('/ai_feedback_forum', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('ai-feedback-content').innerHTML = `
+                    <div class="ai-feedback-container">${data.feedback}</div>
+                `;
+            })
+            .catch(() => {
+                document.getElementById('ai-feedback-content').innerHTML = `<div class='alert alert-danger'>Failed to get AI feedback.</div>`;
+            });
+        }
+        
+        // Modal functions
+        function showAIFeedbackModal() {
+            document.getElementById('ai-feedback-modal').style.display = 'flex';
+        }
+        
+        function closeAIFeedbackModal() {
+            document.getElementById('ai-feedback-modal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('ai-feedback-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAIFeedbackModal();
+            }
+        });
+        
+        // Loading indicator functions
+        function showRefreshLoading() {
+            // Create loading overlay if it doesn't exist
+            let loadingOverlay = document.getElementById('refresh-loading-overlay');
+            if (!loadingOverlay) {
+                loadingOverlay = document.createElement('div');
+                loadingOverlay.id = 'refresh-loading-overlay';
+                loadingOverlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    background: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 9999;
+                    backdrop-filter: blur(2px);
+                `;
+                loadingOverlay.innerHTML = `
+                    <div style="
+                        background: white;
+                        padding: 30px;
+                        border-radius: 15px;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                        text-align: center;
+                        max-width: 300px;
+                    ">
+                        <div style="
+                            width: 50px;
+                            height: 50px;
+                            border: 4px solid #f3f3f3;
+                            border-top: 4px solid #3b82f6;
+                            border-radius: 50%;
+                            animation: spin 1s linear infinite;
+                            margin: 0 auto 20px;
+                        "></div>
+                        <h5 style="color: #374151; margin: 0;">Refreshing Page</h5>
+                        <p style="color: #6b7280; margin: 10px 0 0; font-size: 0.9rem;">Updating with your new reply...</p>
+                    </div>
+                `;
+                document.body.appendChild(loadingOverlay);
+            }
+            loadingOverlay.style.display = 'flex';
+        }
+        
+        function hideRefreshLoading() {
+            const loadingOverlay = document.getElementById('refresh-loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+        
+        // Add CSS animation for spinner
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure permission functions are available before fetching threads
+            if (typeof canEditThread === 'undefined' || typeof canDeleteThread === 'undefined' || 
+                typeof canEditPost === 'undefined' || typeof canDeletePost === 'undefined') {
+                console.error('Permission functions not defined');
+                return;
+            }
+            
+            fetchThreads();
+            // Remove auto-refresh to prevent form closing
+            // setInterval(refreshThreadsKeepForms, 10000); // Poll every 10s for real-time updates
+            
+            // Add form validation and better UX
+            const threadForm = document.getElementById('thread-form');
+            const titleInput = document.getElementById('title');
+            const contentInput = document.getElementById('content');
+            
+            // Add character counter for content
+            contentInput.addEventListener('input', function() {
+                const remaining = 1000 - this.value.length;
+                const counter = this.parentNode.querySelector('.char-counter') || 
+                               document.createElement('div');
+                counter.className = 'char-counter';
+                counter.style.fontSize = '0.8rem';
+                counter.style.color = remaining < 100 ? '#ef4444' : '#64748b';
+                counter.textContent = `${remaining} characters remaining`;
+                
+                if (!this.parentNode.querySelector('.char-counter')) {
+                    this.parentNode.appendChild(counter);
+                }
+            });
+            
+            // Add real-time validation
+            titleInput.addEventListener('input', function() {
+                this.style.borderColor = this.value.length > 5 ? '#10b981' : '#d1d5db';
+            });
+            
+            contentInput.addEventListener('input', function() {
+                this.style.borderColor = this.value.length > 10 ? '#10b981' : '#d1d5db';
+            });
+        });
+    </script>
+</body>
+</html>

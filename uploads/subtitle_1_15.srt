@@ -1,0 +1,151 @@
+1
+00:00:00,000 --> 00:00:02,280
+what are decorators in Python let's say
+
+2
+00:00:02,280 --> 00:00:03,840
+I'm building a python project and I
+
+3
+00:00:03,840 --> 00:00:05,160
+really want to time how long each of
+
+4
+00:00:05,160 --> 00:00:06,960
+these functions takes to run sure I
+
+5
+00:00:06,960 --> 00:00:08,160
+could go through each of these functions
+
+6
+00:00:08,160 --> 00:00:09,900
+and Implement some timing functionality
+
+7
+00:00:09,900 --> 00:00:11,280
+for each of them but what if I have
+
+8
+00:00:11,280 --> 00:00:12,840
+hundreds of functions that would take
+
+9
+00:00:12,840 --> 00:00:14,519
+forever instead I'm going to create a
+
+10
+00:00:14,519 --> 00:00:16,260
+function to do it for me let's call it
+
+11
+00:00:16,260 --> 00:00:17,880
+tick tock and it's going to take in a
+
+12
+00:00:17,880 --> 00:00:20,100
+function as an input now inside let's
+
+13
+00:00:20,100 --> 00:00:22,020
+create a function called wrapper now in
+
+14
+00:00:22,020 --> 00:00:23,939
+a wrapper let's define a start time and
+
+15
+00:00:23,939 --> 00:00:25,199
+then let's run the function that we
+
+16
+00:00:25,199 --> 00:00:26,939
+passed into Tick Tock and then after the
+
+17
+00:00:26,939 --> 00:00:28,740
+function is executed let's determine how
+
+18
+00:00:28,740 --> 00:00:30,480
+long it took by taking the current time
+
+19
+00:00:30,480 --> 00:00:32,340
+minus our start time now let's print
+
+20
+00:00:32,340 --> 00:00:34,980
+that it took T2 seconds to execute and
+
+21
+00:00:34,980 --> 00:00:36,540
+now down here let's return this wrapper
+
+22
+00:00:36,540 --> 00:00:38,640
+function so now all I have to do here is
+
+23
+00:00:38,640 --> 00:00:41,399
+do at sign Tick Tock over each of these
+
+24
+00:00:41,399 --> 00:00:43,320
+functions that I want to time python
+
+25
+00:00:43,320 --> 00:00:45,420
+sees this at symbol and understands that
+
+26
+00:00:45,420 --> 00:00:46,800
+this function under it needs to be
+
+27
+00:00:46,800 --> 00:00:48,719
+passed into a function called Tick Tock
+
+28
+00:00:48,719 --> 00:00:50,879
+then the function runs in Tick Tock with
+
+29
+00:00:50,879 --> 00:00:52,440
+these extra lines of code wrapped around
+
+30
+00:00:52,440 --> 00:00:54,539
+it so we can run this and there we go
+
+31
+00:00:54,539 --> 00:00:55,860
+you can see it timed each of these
+
+32
+00:00:55,860 --> 00:00:57,539
+functions and we can also add the
+
+33
+00:00:57,539 --> 00:00:58,860
+function name here in the print
+
+34
+00:00:58,860 --> 00:01:01,199
+statement so let's do 5 monk dot Dunder
+
+35
+00:01:01,199 --> 00:01:04,080
+name ran in T2 seconds so now when we
+
+36
+00:01:04,080 --> 00:01:06,299
+run it it gives us a bit more context be
+
+37
+00:01:06,299 --> 00:01:07,500
+sure to leave a like if you found this
+
+38
+00:01:07,500 --> 00:01:09,799
+helpful

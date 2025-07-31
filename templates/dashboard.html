@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js');
+        });
+      }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <style>
+        body { font-family: 'Roboto', Arial, sans-serif; background: #f7f7f7; }
+        .hero-img { width: 100%; max-height: 320px; object-fit: cover; border-radius: 16px; margin-bottom: 24px; }
+        .card { border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+        .footer { background: #222; color: #fff; padding: 24px 0; text-align: center; margin-top: 40px; }
+        .footer a { color: #4CAF50; margin: 0 8px; font-size: 1.3em; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand d-flex align-items-center" href="/home">
+      <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="LearnNest Logo" style="height:36px;margin-right:10px;">
+      LearnNest
+    </a>
+  </div>
+</nav>
+<main class="container py-4">
+  <img class="hero-img" src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1200&q=80" alt="Learning Hero">
+  <h1 class="mb-3">Dashboard <i class="fa fa-chart-line text-success"></i></h1>
+        {% if is_creator %}
+            <h2>Your Courses</h2>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;">
+                <form method="GET" action="/dashboard">
+                    <label for="course_filter">Filter by Course:</label>
+                    <select name="course_filter" id="course_filter" onchange="this.form.submit()">
+                        <option value="">All</option>
+                        {% for stat in course_stats %}
+                            <option value="{{ stat.id }}" {% if request.args.get('course_filter') == stat.id|string %}selected{% endif %}>{{ stat.title }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                <div>
+                    <button onclick="window.location.href='/dashboard/export_assignments'">Export All (CSV)</button>
+                    <button onclick="window.location.href='/dashboard/export_assignments?format=xlsx'">Export All (XLSX)</button>
+                </div>
+            </div>
+            <table>
+                <tr><th>Course</th><th>Enrolled</th><th>Avg Grade</th><th>Completion Rate (%)</th></tr>
+                {% for stat in course_stats %}
+                    <tr>
+                        <td>{{ stat.title }}</td>
+                        <td>{{ stat.enrolled }}</td>
+                        <td style="color:{{ 'red' if stat.avg_grade < 60 else 'inherit' }}">{{ stat.avg_grade }}</td>
+                        <td>{{ stat.completion_rate }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <div class="chart-container">
+                <canvas id="enrollChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="gradeChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="completionPie"></canvas>
+            </div>
+            <h2>Assignment Stats</h2>
+            <button onclick="window.location.href='/dashboard/export_assignments'">Export Assignment Stats (CSV)</button>
+            <table>
+                <tr><th>Course</th><th>Assignment</th><th>Avg</th><th>Min</th><th>Max</th><th>Submissions</th></tr>
+                {% for a in assignment_stats %}
+                    <tr>
+                        <td>{{ a.course }}</td>
+                        <td>{{ a.assignment }}</td>
+                        <td>{{ a.avg|round(2) }}</td>
+                        <td>{{ a.min }}</td>
+                        <td>{{ a.max }}</td>
+                        <td>{{ a.count }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <h2>At-Risk Students</h2>
+            <table>
+                <tr><th>Course</th><th>Username</th><th>Avg Grade</th><th>Incomplete Assignments</th></tr>
+                {% for s in at_risk_students %}
+                    <tr>
+                        <td>{{ s.course }}</td>
+                        <td>{{ s.username }}</td>
+                        <td>{{ s.avg_grade }}</td>
+                        <td>{{ s.incomplete }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <h2>Leaderboard</h2>
+            <form method="GET" action="/dashboard">
+                <label for="lb_course">Leaderboard for:</label>
+                <select name="lb_course" id="lb_course" onchange="this.form.submit()">
+                    <option value="">Global</option>
+                    {% for stat in course_stats %}
+                        <option value="{{ stat.id }}" {% if request.args.get('lb_course') == stat.id|string %}selected{% endif %}>{{ stat.title }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+            <table>
+                <tr><th>Rank</th><th>User</th><th>Points</th></tr>
+                {% for idx, user in enumerate(leaderboard) %}
+                    <tr {% if user[0] == current_user.username %}style="background:#e3f2fd;font-weight:bold;"{% endif %}>
+                        <td>{{ idx+1 }}</td>
+                        <td><img src="/{{ user[2] if user[2] else 'static/default_avatar.png' }}" alt="avatar" style="width:28px;height:28px;border-radius:50%;vertical-align:middle;margin-right:6px;">{{ user[0] }}</td>
+                        <td>{{ user[1] }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <h2>Your Badges</h2>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+                {% for badge in badges %}
+                    <span style="background:#e0e0e0;border-radius:16px;padding:6px 14px;font-size:1.1em;display:inline-block;cursor:pointer;" title="{{ badge_descriptions[badge] if badge in badge_descriptions else '' }}">
+                        {% if badge == 'First Submission' %}🥇{% elif badge == 'High Grade' %}🏆{% elif badge == 'Perfect Score' %}🌟{% elif badge == 'Forum Contributor' %}💬{% elif badge == 'Course Completion' %}🎓{% elif badge == 'Streak' %}🔥{% else %}🏅{% endif %} {{ badge }}
+                    </span>
+                {% else %}
+                    <span>No badges yet.</span>
+                {% endfor %}
+            </div>
+            <div id="badge-toast" style="display:none;position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#4CAF50;color:white;padding:14px 28px;border-radius:8px;font-size:1.2em;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.15);animation:fadein 0.5s,fadeout 0.5s 2.5s;">Badge Unlocked!</div>
+            <script>
+                function showBadgeToast(badge) {
+                    var toast = document.getElementById('badge-toast');
+                    toast.textContent = '🏅 Badge Unlocked: ' + badge;
+                    toast.style.display = 'block';
+                    setTimeout(function(){ toast.style.display = 'none'; }, 3000);
+                }
+                // Optionally, trigger showBadgeToast from backend via JS if a badge was just earned
+            </script>
+            <script>
+                const courseLabels = {{ course_stats|map(attribute='title')|list|tojson }};
+                const enrollData = {{ course_stats|map(attribute='enrolled')|list|tojson }};
+                const gradeData = {{ course_stats|map(attribute='avg_grade')|list|tojson }};
+                const completionData = {{ course_stats|map(attribute='completion_rate')|list|tojson }};
+                new Chart(document.getElementById('enrollChart').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: courseLabels, datasets: [{ label: 'Enrolled', data: enrollData, backgroundColor: '#4CAF50' }] },
+                    options: { plugins: { title: { display: true, text: 'Enrollment per Course' }, tooltip: { enabled: true }, legend: { display: true } }, responsive: true }
+                });
+                new Chart(document.getElementById('gradeChart').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: courseLabels, datasets: [{ label: 'Avg Grade', data: gradeData, backgroundColor: gradeData.map(g=>g<60?'#f44336':'#2196F3') }] },
+                    options: { plugins: { title: { display: true, text: 'Average Grade per Course' }, tooltip: { enabled: true }, legend: { display: true } }, scales: { y: { max: 100, beginAtZero: true } }, responsive: true }
+                });
+                new Chart(document.getElementById('completionPie').getContext('2d'), {
+                    type: 'doughnut',
+                    data: { labels: courseLabels, datasets: [{ label: 'Completion Rate', data: completionData, backgroundColor: ['#4CAF50','#FFC107','#2196F3','#f44336','#9C27B0','#00BCD4'] }] },
+                    options: { plugins: { title: { display: true, text: 'Completion Rate by Course' }, tooltip: { enabled: true }, legend: { display: true } }, responsive: true }
+                });
+            </script>
+            <div class="chart-container">
+                <canvas id="engagementChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="assignmentCompletionChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="activeUsersChart"></canvas>
+            </div>
+            <script>
+                // Engagement Over Time
+                const engagementLabels = {{ engagement_labels|tojson }};
+                const engagementCounts = {{ engagement_counts|tojson }};
+                new Chart(document.getElementById('engagementChart').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: engagementLabels, datasets: [{ label: 'Submissions per Week', data: engagementCounts, borderColor: '#9C27B0', fill: false }] },
+                    options: { plugins: { title: { display: true, text: 'Engagement Over Time' } }, responsive: true }
+                });
+                // Assignment Completion Rates
+                const assignmentNames = {{ assignment_names|tojson }};
+                const assignmentCompletionRates = {{ assignment_completion_rates|tojson }};
+                new Chart(document.getElementById('assignmentCompletionChart').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: assignmentNames, datasets: [{ label: 'Completion Rate (%)', data: assignmentCompletionRates, backgroundColor: '#FFC107' }] },
+                    options: { plugins: { title: { display: true, text: 'Assignment Completion Rates' } }, scales: { y: { max: 100, beginAtZero: true } }, responsive: true }
+                });
+                // Active Users Per Week
+                const activeLabels = {{ active_labels|tojson }};
+                const activeCounts = {{ active_counts|tojson }};
+                new Chart(document.getElementById('activeUsersChart').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: activeLabels, datasets: [{ label: 'Active Users per Week', data: activeCounts, borderColor: '#00BCD4', fill: false }] },
+                    options: { plugins: { title: { display: true, text: 'Active Users Per Week' } }, responsive: true }
+                });
+            </script>
+        {% else %}
+            <h2>Your Courses</h2>
+            <table>
+                <tr><th>Course</th><th>Avg Grade</th><th>Completion Rate (%)</th></tr>
+                {% for stat in progress_stats %}
+                    <tr>
+                        <td>{{ stat.title }}</td>
+                        <td>{{ stat.avg_grade }}</td>
+                        <td>{{ stat.completion_rate }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <div class="chart-container">
+                <canvas id="studentGradeChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="gradeTrendChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="completionTimelineChart"></canvas>
+            </div>
+            <button onclick="window.location.href='/dashboard/export_progress'">Export My Progress (CSV)</button>
+            <script>
+                const courseLabels = {{ progress_stats|map(attribute='title')|list|tojson }};
+                const gradeData = {{ progress_stats|map(attribute='avg_grade')|list|tojson }};
+                new Chart(document.getElementById('studentGradeChart').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: courseLabels, datasets: [{ label: 'Avg Grade', data: gradeData, backgroundColor: '#2196F3' }] },
+                    options: { plugins: { title: { display: true, text: 'Your Average Grade per Course' } }, scales: { y: { max: 100, beginAtZero: true } } }
+                });
+                // Grade trend
+                const trendLabels = {{ grade_trends|map(attribute='assignment')|list|tojson }};
+                const trendData = {{ grade_trends|map(attribute='grade')|list|tojson }};
+                new Chart(document.getElementById('gradeTrendChart').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: trendLabels, datasets: [{ label: 'Grade Trend', data: trendData, borderColor: '#4CAF50', fill: false }] },
+                    options: { plugins: { title: { display: true, text: 'Grade Trend' } }, scales: { y: { max: 100, beginAtZero: true } } }
+                });
+                // Completion timeline
+                const compLabels = {{ completion_timeline|map(attribute='assignment')|list|tojson }};
+                const compData = {{ completion_timeline|map(attribute='index')|list|tojson }};
+                new Chart(document.getElementById('completionTimelineChart').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: compLabels, datasets: [{ label: 'Completed', data: compData, backgroundColor: '#FFC107' }] },
+                    options: { plugins: { title: { display: true, text: 'Completion Timeline' } } }
+                });
+            </script>
+            <h2>Upcoming Assignments</h2>
+            <ul>
+                {% for a in upcoming_assignments %}
+                    <li class="upcoming">{{ a.name }} (Due: {{ a.due_date }})</li>
+                {% else %}
+                    <li>No upcoming assignments.</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <h2>AI Recommendations</h2>
+        <div style="margin-bottom:18px;">
+            <b>Recommended Resources:</b>
+            <ul>
+                {% for rec in recommend_resources %}
+                    <li>{{ rec[1] }}</li>
+                {% else %}
+                    <li>No recommendations yet.</li>
+                {% endfor %}
+            </ul>
+            <b>Recommended Assignments:</b>
+            <ul>
+                {% for rec in recommend_assignments %}
+                    <li>{{ rec[1] }} (Due: {{ rec[2] }})</li>
+                {% else %}
+                    <li>No recommendations yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <h2>Recent AI Feedback</h2>
+        <div style="margin-bottom:18px;">
+            {% if ai_feedback %}
+                <ul>
+                {% for fb in ai_feedback %}
+                    <li>
+                        <span style="color:#4CAF50;font-weight:bold;">AI Feedback:</span>
+                        <span>{{ fb[:120] }}{% if fb|length > 120 %}... <a href="#" onclick="showAIDetails(`{{ fb|escapejs }}`);return false;">View More</a>{% endif %}</span>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <span>No recent AI feedback yet.</span>
+            {% endif %}
+        </div>
+        <div id="ai-details-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:9999;align-items:center;justify-content:center;">
+            <div style="background:white;padding:24px;border-radius:10px;max-width:90vw;max-height:80vh;overflow:auto;box-shadow:0 2px 12px rgba(0,0,0,0.18);">
+                <h3>AI Feedback Details</h3>
+                <div id="ai-details-content" style="font-size:1.08em;"></div>
+                <button onclick="closeAIDetails()" style="margin-top:18px;">Close</button>
+        </div>
+        </div>
+        <script>
+        function showAIDetails(feedback) {
+            document.getElementById('ai-details-content').innerHTML = feedback ? feedback.replace(/\n/g, '<br>') : '<span style="color:#888;">No AI feedback available.</span>';
+            document.getElementById('ai-details-modal').style.display = 'flex';
+        }
+        function closeAIDetails() {
+            document.getElementById('ai-details-modal').style.display = 'none';
+        }
+        // Example: AI score trend (stub data)
+        const aiScores = {{ ai_scores|tojson }};
+        const aiLabels = {{ ai_score_labels|tojson }};
+        new Chart(document.getElementById('aiScoreChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: aiLabels, datasets: [{ label: 'AI Score', data: aiScores, borderColor: '#4CAF50', fill: false }] },
+            options: { plugins: { title: { display: true, text: 'AI Score Trend' } }, scales: { y: { max: 100, beginAtZero: true } } }
+        });
+        </script>
+    </main>
+<footer class="footer">
+  <div>
+    <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
+    <a href="https://facebook.com/" target="_blank"><i class="fab fa-facebook"></i></a>
+    <a href="https://linkedin.com/" target="_blank"><i class="fab fa-linkedin"></i></a>
+    <a href="https://github.com/" target="_blank"><i class="fab fa-github"></i></a>
+  </div>
+  <div class="mt-2">&copy; {{ 2024 }} LearnNest. All rights reserved.</div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

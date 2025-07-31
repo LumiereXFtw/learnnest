@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnNest - Course Notes</title>
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js');
+        });
+      }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: #4CAF50 !important;
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            color: #374151 !important;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: #4CAF50 !important;
+        }
+        
+        .notes-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .notes-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .notes-header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+        
+        .notes-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .notes-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .notes-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .notes-content {
+            padding: 40px 30px;
+        }
+        
+        .create-note-section {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .form-control {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+        }
+        
+        .form-control:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+            outline: none;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn-outline-primary {
+            background: transparent;
+            color: #3b82f6;
+            border: 1px solid #3b82f6;
+        }
+        
+        .btn-outline-primary:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .note-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .note-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .note-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .note-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        
+        .note-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .note-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        
+        .note-content {
+            padding: 20px;
+            line-height: 1.6;
+            color: #374151;
+            white-space: pre-wrap;
+        }
+        
+        .external-link {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .external-link iframe {
+            width: 100%;
+            max-width: 560px;
+            height: 315px;
+            border-radius: 8px;
+        }
+        
+        .external-link a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .external-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .ai-feedback-container {
+            background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+            border: 1px solid #10b981;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+            color: #065f46;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: #374151;
+        }
+        
+        .empty-state p {
+            margin: 0;
+            font-size: 0.95rem;
+        }
+        
+        .flash-messages {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        
+        .flash-messages li {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #78350f;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90vw;
+            max-height: 80vh;
+            overflow: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            transition: color 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            color: #374151;
+        }
+        
+        .loading-dots::after {
+            content: '';
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+        
+        @media (max-width: 768px) {
+            .notes-container {
+                margin: 20px auto;
+                padding: 0 15px;
+            }
+            
+            .notes-header {
+                padding: 30px 20px;
+            }
+            
+            .notes-content {
+                padding: 30px 20px;
+            }
+            
+            .notes-title {
+                font-size: 2rem;
+            }
+            
+            .note-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="/home">
+                <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="LearnNest Logo">
+                LearnNest
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/user_directory"><i class="fa fa-users"></i> Users</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/leaderboard"><i class="fa fa-trophy"></i> Leaderboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/notifications"><i class="fa fa-bell"></i> Notifications</a></li>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.role == 'creator' %}
+                            <li class="nav-item"><a class="nav-link" href="/create_course"><i class="fa fa-plus"></i> Create Course</a></li>
+                        {% endif %}
+                        <li class="nav-item"><a class="nav-link" href="/logout"><i class="fa fa-sign-out-alt"></i> Logout</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/profile"><img src="/{{ current_user.avatar if current_user.avatar else 'static/default_avatar.png' }}" alt="avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;"> {{ current_user.username }}</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="/login"><i class="fa fa-sign-in-alt"></i> Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/register"><i class="fa fa-user-plus"></i> Register</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="notes-container">
+        <div class="notes-card">
+            <!-- Notes Header -->
+            <div class="notes-header">
+                <div class="notes-title">
+                    <i class="fas fa-sticky-note"></i> Course Notes
+                </div>
+                <div class="notes-subtitle">
+                    Capture your thoughts, ideas, and learning insights
+                </div>
+            </div>
+
+            <!-- Notes Content -->
+            <div class="notes-content">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <ul class="flash-messages">
+                            {% for message in messages %}
+                                <li>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Create New Note Section -->
+                {% if is_enrolled %}
+                <div class="create-note-section">
+                    <div class="section-title">
+                        <i class="fas fa-plus-circle"></i>
+                        Add New Note
+                    </div>
+                    <form method="POST" action="{{ url_for('notes', course_id=course_id) }}">
+                        <div class="form-group">
+                            <label for="content" class="form-label">Your Note</label>
+                            <textarea id="content" name="content" rows="5" class="form-control" placeholder="Write your thoughts, questions, or learning insights here..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="ext_url" class="form-label">Related Link (Optional)</label>
+                            <input type="url" id="ext_url" name="ext_url" class="form-control" placeholder="https://example.com (YouTube, Google Docs, PDF, etc.)">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Save Note
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
+                <!-- Notes List Section -->
+                <div class="section-title">
+                    <i class="fas fa-list"></i>
+                    Your Notes
+                </div>
+                <div id="notes-container">
+                    {% if notes %}
+                        {% for note in notes %}
+                        <div class="note-card">
+                            <div class="note-header">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div style="flex: 1;">
+                                        <div class="note-title">
+                                            <i class="fas fa-sticky-note"></i> Note #{{ loop.index }}
+                                        </div>
+                                        <div class="note-meta">
+                                            <span><i class="fas fa-calendar"></i> Created: {{ note[2] }}</span>
+                                            <span><i class="fas fa-edit"></i> Updated: {{ note[3] }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="note-actions">
+                                        <button class="btn btn-outline-primary btn-sm" onclick="editNote({{ note[0] }}, '{{ note[1] | replace('\n', '\\n') | e }}')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <form action="{{ url_for('delete_note', course_id=course_id, note_id=note[0]) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this note?')">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                        <button class="btn btn-success btn-sm" onclick="getAIFeedback({{ note[0] }})">
+                                            <i class="fas fa-robot"></i> AI Feedback
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="note-content">{{ note[1] }}</div>
+                            {% if note[4] %}
+                            <div class="external-link">
+                                {% if note[5] == 'youtube' %}
+                                    <iframe src="{{ note[4].replace('watch?v=', 'embed/') }}" frameborder="0" allowfullscreen></iframe>
+                                {% elif note[5] == 'gdoc' %}
+                                    <a href="{{ note[4] }}" target="_blank"><i class="fas fa-external-link-alt"></i> View Google Doc</a>
+                                {% elif note[5] == 'pdf' %}
+                                    <a href="{{ note[4] }}" target="_blank"><i class="fas fa-file-pdf"></i> View PDF</a>
+                                {% else %}
+                                    <a href="{{ note[4] }}" target="_blank"><i class="fas fa-link"></i> External Link</a>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-sticky-note"></i>
+                            <h3>No notes yet</h3>
+                            <p>Start capturing your learning journey!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Note Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeEditModal()">&times;</span>
+            <h3><i class="fas fa-edit"></i> Edit Note</h3>
+            <form id="editForm" method="POST" action="{{ url_for('edit_note', course_id=course_id) }}">
+                <input type="hidden" name="note_id" id="editNoteId">
+                <div class="form-group">
+                    <label for="editContent" class="form-label">Note Content</label>
+                    <textarea name="content" id="editContent" rows="8" class="form-control" required></textarea>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Note
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="closeEditModal()">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Feedback Modal -->
+    <div id="aiModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeAIModal()">&times;</span>
+            <h3><i class="fas fa-robot"></i> AI Feedback</h3>
+            <div id="aiFeedback"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function editNote(noteId, content) {
+            document.getElementById('editNoteId').value = noteId;
+            document.getElementById('editContent').value = content.replace(/\\n/g, '\n');
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function getAIFeedback(noteId) {
+            const button = document.querySelector(`button[onclick="getAIFeedback(${noteId})"]`);
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting AI Feedback...';
+            }
+            
+            document.getElementById('aiModal').style.display = 'flex';
+            document.getElementById('aiFeedback').innerHTML = `
+                <div class="text-center py-3">
+                    <i class="fas fa-robot fa-2x" style="color: #10b981; margin-bottom: 16px;"></i>
+                    <h6>Analyzing your note with Gemini 2.0 Flash<span class="loading-dots"></span></h6>
+                </div>
+            `;
+            
+            fetch('/ai_feedback_note', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ note_id: noteId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('aiFeedback').innerHTML = `<div class='alert alert-danger'>Error: ${data.error}</div>`;
+                } else {
+                    document.getElementById('aiFeedback').innerHTML = `<div class="ai-feedback-container">${data.feedback}</div>`;
+                }
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-robot"></i> AI Feedback';
+                }
+            })
+            .catch(error => {
+                document.getElementById('aiFeedback').innerHTML = `<div class='alert alert-danger'>Error fetching AI feedback: ${error}</div>`;
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-robot"></i> AI Feedback';
+                }
+            });
+        }
+
+        function closeAIModal() {
+            document.getElementById('aiModal').style.display = 'none';
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                closeEditModal();
+                closeAIModal();
+            }
+        }
+
+        // Add character counter for note content
+        document.addEventListener('DOMContentLoaded', function() {
+            const contentInput = document.getElementById('content');
+            if (contentInput) {
+                contentInput.addEventListener('input', function() {
+                    const remaining = 2000 - this.value.length;
+                    const counter = this.parentNode.querySelector('.char-counter') || 
+                                   document.createElement('div');
+                    counter.className = 'char-counter';
+                    counter.style.fontSize = '0.8rem';
+                    counter.style.color = remaining < 200 ? '#ef4444' : '#64748b';
+                    counter.textContent = `${remaining} characters remaining`;
+                    
+                    if (!this.parentNode.querySelector('.char-counter')) {
+                        this.parentNode.appendChild(counter);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

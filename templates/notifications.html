@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+        main { max-width: 600px; margin: 40px auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); padding: 24px; }
+        h1 { margin-top: 0; }
+        .notification { padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; }
+        .notification.unread { background: #e3f2fd; }
+        .message { flex: 1; }
+        .created { color: #888; font-size: 0.9em; margin-left: 12px; }
+        .mark-read { background: #4CAF50; color: white; border: none; border-radius: 4px; padding: 6px 12px; margin-left: 16px; cursor: pointer; font-size: 0.95em; }
+        .mark-read:hover { background: #388e3c; }
+        a { color: #2196F3; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            padding: 16px;
+            position: fixed;
+            z-index: 9999;
+            left: 50%;
+            bottom: 30px;
+            font-size: 1em;
+            opacity: 0;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/user_directory">User Directory</a>
+        <a href="/notifications" style="position:relative;">
+            <span style="font-size:1.3em;">🔔</span>
+            {% if unread_notifications_count and unread_notifications_count > 0 %}
+                <span style="position:absolute;top:0;right:-8px;background:#f44336;color:white;border-radius:50%;padding:2px 6px;font-size:0.8em;">{{ unread_notifications_count }}</span>
+            {% endif %}
+        </a>
+    </nav>
+    <div id="toast"></div>
+    <main>
+        <h1>Notifications</h1>
+        {% if notifications %}
+            {% for n in notifications %}
+                <div class="notification{% if not n[3] %} unread{% endif %}">
+                    <div class="message">
+                        {% if n[2] %}
+                            <a href="{{ n[2] }}">{{ n[1] }}</a>
+                        {% else %}
+                            {{ n[1] }}
+                        {% endif %}
+                    </div>
+                    <div class="created">{{ n[4] }}</div>
+                    {% if not n[3] %}
+                        <form method="POST" action="{{ url_for('mark_notification_read', notification_id=n[0]) }}" style="display:inline;">
+                            <button type="submit" class="mark-read">Mark as read</button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No notifications.</p>
+        {% endif %}
+    </main>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'show';
+            setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 3500);
+        }
+        socket.on('new_notification', function(data) {
+            showToast('🔔 ' + data.message);
+            setTimeout(() => { location.reload(); }, 2000);
+        });
+    </script>
+</body>
+</html> 

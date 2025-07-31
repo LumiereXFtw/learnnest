@@ -1,0 +1,646 @@
+{% extends 'base.html' %}
+{% block title %}Create Course{% endblock %}
+{% block content %}
+    <style>
+    .course-create-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        padding: 2rem 0;
+        }
+        .course-create-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        padding: 2rem;
+        max-width: 800px;
+            margin: 0 auto;
+        }
+        .course-create-title {
+        color: #1e3a8a;
+        text-align: center;
+        margin-bottom: 2rem;
+            font-weight: 700;
+        }
+        .course-create-section {
+            margin-bottom: 1.5rem;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #f9fafb;
+    }
+    .chapter-section {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    .chapter-section:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    }
+    .chapter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    .file-upload-area {
+        border: 2px dashed #d1d5db;
+            border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        background: #f9fafb;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+        }
+    .file-upload-area:hover {
+            border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    .file-list {
+        margin-top: 1rem;
+        }
+    .file-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        background: #f3f4f6;
+        border-radius: 6px;
+            margin-bottom: 0.5rem;
+    }
+    .remove-file {
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 0.25rem 0.5rem;
+        cursor: pointer;
+        }
+    .add-chapter-btn {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        }
+    .add-chapter-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .remove-chapter-btn {
+            background: #ef4444;
+        color: white;
+            border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        }
+    .form-control {
+            border: 1.5px solid #cbd5e1;
+            padding: 0.5rem 1rem;
+        }
+    </style>
+
+    <nav>
+        <a href="{{ url_for('home') }}">Home</a>
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('create_course') }}">Create Course</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+    </nav>
+
+    <main class="course-create-bg">
+        <div class="course-create-card">
+            <h2 class="course-create-title">Create a Course</h2>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                    <div class="alert alert-danger">
+                    {% for message in messages %}
+                            <div>{{ message }}</div>
+                    {% endfor %}
+                    </div>
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" enctype="multipart/form-data" id="course-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <!-- Progress Indicator -->
+            <div style="background: #f8fafc; border-radius: 12px; padding: 1rem; margin-bottom: 2rem;">
+                <h5 style="color: #1e3a8a; margin-bottom: 0.5rem;">
+                    <i class="fa fa-tasks"></i> Course Creation Progress
+                </h5>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <span id="progress-basic" style="padding: 0.5rem 1rem; border-radius: 20px; background: #e5e7eb; color: #6b7280;">
+                        <i class="fa fa-info-circle"></i> Basic Info
+                    </span>
+                    <span id="progress-structure" style="padding: 0.5rem 1rem; border-radius: 20px; background: #e5e7eb; color: #6b7280;">
+                        <i class="fa fa-sitemap"></i> Structure
+                    </span>
+                    <span id="progress-files" style="padding: 0.5rem 1rem; border-radius: 20px; background: #e5e7eb; color: #6b7280;">
+                        <i class="fa fa-folder-open"></i> Files
+                    </span>
+                    <span id="progress-ready" style="padding: 0.5rem 1rem; border-radius: 20px; background: #e5e7eb; color: #6b7280;">
+                        <i class="fa fa-check-circle"></i> Ready
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Basic Course Information -->
+            <div class="course-create-section">
+                <h4 style="color: #1e3a8a; margin-bottom: 1rem;">
+                    <i class="fa fa-info-circle"></i> Basic Course Information
+                </h4>
+                <div class="mb-3">
+                    <label class="form-label">Course Title *</label>
+                    <input type="text" name="title" class="form-control" required placeholder="Enter course title">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description *</label>
+                    <textarea name="description" class="form-control" rows="3" required placeholder="Brief course description..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Live Session/Meeting Link</label>
+                    <input type="url" name="meeting_link" class="form-control" placeholder="https://zoom.us/j/... or https://meet.google.com/...">
+                    <small class="form-text text-muted">Optional: Add a link for live sessions</small>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Live Session Start Time</label>
+                            <input type="time" name="live_session_start" class="form-control">
+                            <small class="form-text text-muted">When students can start joining (e.g., 4:00 PM)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Live Session End Time</label>
+                            <input type="time" name="live_session_end" class="form-control">
+                            <small class="form-text text-muted">When the session ends (e.g., 6:00 PM)</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Live Session Days</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="live_days" value="monday" id="monday">
+                        <label class="form-check-label" for="monday">Monday</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="live_days" value="tuesday" id="tuesday">
+                        <label class="form-check-label" for="tuesday">Tuesday</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="live_days" value="wednesday" id="wednesday">
+                        <label class="form-check-label" for="wednesday">Wednesday</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="live_days" value="thursday" id="thursday">
+                        <label class="form-check-label" for="thursday">Thursday</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="live_days" value="friday" id="friday">
+                        <label class="form-check-label" for="friday">Friday</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="live_days" value="saturday" id="saturday">
+                        <label class="form-check-label" for="saturday">Saturday</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="live_days" value="sunday" id="sunday">
+                        <label class="form-check-label" for="sunday">Sunday</label>
+                    </div>
+                    <small class="form-text text-muted">Select the days when live sessions are available</small>
+                </div>
+            </div>
+
+            <!-- Course Structure -->
+                <div class="course-create-section">
+                <h4 style="color: #1e3a8a; margin-bottom: 1rem;">
+                    <i class="fa fa-sitemap"></i> Course Structure
+                </h4>
+                <div class="mb-3">
+                    <label class="form-label">Course Outline *</label>
+                    <div id="outline-fields"></div>
+                    <button type="button" onclick="addOutlineField()" class="btn btn-outline-primary btn-sm mt-2">
+                        <i class="fa fa-plus"></i> Add Topic
+                    </button>
+                    <input type="hidden" name="outline" id="outline-hidden" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Learning Objectives *</label>
+                    <div id="objectives-fields"></div>
+                    <button type="button" onclick="addObjectiveField()" class="btn btn-outline-primary btn-sm mt-2">
+                        <i class="fa fa-plus"></i> Add Objective
+                    </button>
+                    <input type="hidden" name="objectives" id="objectives-hidden" required>
+                </div>
+            </div>
+
+            <!-- Chapter Files -->
+            <div class="course-create-section">
+                <h4 style="color: #1e3a8a; margin-bottom: 1rem;">
+                    <i class="fa fa-folder-open"></i> Chapter Files & Resources
+                </h4>
+                <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 1rem; margin-bottom: 1rem; border-radius: 0 8px 8px 0;">
+                    <h6 style="color: #1e40af; margin-bottom: 0.5rem;">
+                        <i class="fa fa-lightbulb"></i> Tips for Better Course Organization
+                    </h6>
+                                                    <ul style="margin: 0; color: #1e40af; font-size: 0.9rem;">
+                                    <li>Upload multiple files per chapter (PDFs, videos, presentations)</li>
+                                    <li>Students will only see files for chapters they have unlocked</li>
+                                    <li>Use descriptive chapter titles to help students navigate</li>
+                                    <li>Supported formats: PDF, DOC, PPT, MP4, Images, ZIP files (max 50MB each)</li>
+                                    <li><strong>File size limit:</strong> 50MB per file to ensure smooth uploads</li>
+                                </ul>
+                </div>
+                
+                <div id="chapters-container">
+                    <!-- Chapter sections will be added here -->
+                </div>
+                
+                <button type="button" onclick="addChapter()" class="add-chapter-btn">
+                    <i class="fa fa-plus"></i> Add Chapter
+                </button>
+            </div>
+
+            <!-- Reference Files -->
+            <div class="course-create-section">
+                <h4 style="color: #1e3a8a; margin-bottom: 1rem;">
+                    <i class="fa fa-file-code"></i> Reference Files (Optional)
+                </h4>
+                <div class="mb-3">
+                    <label class="form-label">Python Reference File (.py only)</label>
+                    <input type="file" name="reference_file" class="form-control" accept=".py">
+                    <small class="form-text text-muted">Upload a Python reference file for code assignments (max 5MB)</small>
+                </div>
+            </div>
+
+                <div class="d-grid mt-4">
+                <button type="button" onclick="previewCourse()" class="btn btn-info btn-lg mb-2">
+                    <i class="fa fa-eye"></i> Preview Course
+                </button>
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fa fa-save"></i> Create Course
+                </button>
+                </div>
+        </form>
+        </div>
+    </main>
+
+<!-- Course Preview Modal -->
+<div id="previewModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:9999; overflow-y:auto;">
+    <div style="background:white; margin:2rem auto; max-width:800px; border-radius:12px; padding:2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <h3 style="margin:0; color:#1e3a8a;">Course Preview</h3>
+            <button onclick="closePreview()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+        <div id="previewContent"></div>
+        <div style="text-align:center; margin-top:1.5rem;">
+            <button onclick="closePreview()" class="btn btn-secondary">Close Preview</button>
+        </div>
+    </div>
+</div>
+
+    <script>
+let chapterCount = 0;
+let fileCounters = {};
+
+    function addOutlineField(val) {
+        var container = document.getElementById('outline-fields');
+        var div = document.createElement('div');
+        div.className = 'mb-2 d-flex align-items-center';
+    div.innerHTML = `
+        <input type="text" class="form-control me-2" placeholder="Topic or Module" value="${val ? val : ''}" required>
+        <button type="button" class="btn btn-outline-danger btn-sm ms-2" onclick="this.parentNode.remove()">
+            <i class="fa fa-times"></i>
+        </button>
+    `;
+        container.appendChild(div);
+    }
+
+    function addObjectiveField(val) {
+        var container = document.getElementById('objectives-fields');
+        var div = document.createElement('div');
+        div.className = 'mb-2 d-flex align-items-center';
+    div.innerHTML = `
+        <input type="text" class="form-control me-2" placeholder="Learning Objective" value="${val ? val : ''}" required>
+        <button type="button" class="btn btn-outline-danger btn-sm ms-2" onclick="this.parentNode.remove()">
+            <i class="fa fa-times"></i>
+        </button>
+    `;
+        container.appendChild(div);
+    }
+
+function addChapter() {
+    chapterCount++;
+    const container = document.getElementById('chapters-container');
+    const chapterDiv = document.createElement('div');
+    chapterDiv.className = 'chapter-section';
+    chapterDiv.id = `chapter-${chapterCount}`;
+    
+    chapterDiv.innerHTML = `
+        <div class="chapter-header">
+            <h5 style="margin: 0; color: #1e3a8a;">
+                <i class="fa fa-book"></i> Chapter ${chapterCount}
+            </h5>
+            <button type="button" class="remove-chapter-btn" onclick="removeChapter(${chapterCount})">
+                <i class="fa fa-trash"></i> Remove Chapter
+            </button>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Chapter Title</label>
+            <input type="text" name="chapter_title_${chapterCount}" class="form-control" placeholder="Enter chapter title" required>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Files for Chapter ${chapterCount}</label>
+            <div class="file-upload-area" id="drop-area-${chapterCount}" onclick="document.getElementById('files-${chapterCount}').click()">
+                <i class="fa fa-cloud-upload-alt fa-2x" style="color: #6b7280; margin-bottom: 0.5rem;"></i>
+                <p style="margin: 0; color: #6b7280;">Click to upload files or drag and drop</p>
+                <p style="margin: 0; font-size: 0.9rem; color: #9ca3af;">Supports: PDF, DOC, PPT, MP4, Images, etc.</p>
+            </div>
+            <input type="file" id="files-${chapterCount}" name="chapter_files_${chapterCount}" multiple 
+                   style="display: none;" onchange="handleFileUpload(${chapterCount}, this)">
+            <div id="file-list-${chapterCount}" class="file-list"></div>
+        </div>
+    `;
+    
+    container.appendChild(chapterDiv);
+    fileCounters[chapterCount] = 0;
+    
+    // Add drag and drop functionality
+    setupDragAndDrop(chapterCount);
+}
+
+function setupDragAndDrop(chapterNum) {
+    const dropArea = document.getElementById(`drop-area-${chapterNum}`);
+    const fileInput = document.getElementById(`files-${chapterNum}`);
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight(e) {
+        dropArea.style.borderColor = '#3b82f6';
+        dropArea.style.background = '#eff6ff';
+    }
+    
+    function unhighlight(e) {
+        dropArea.style.borderColor = '#d1d5db';
+        dropArea.style.background = '#f9fafb';
+    }
+    
+    dropArea.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFileUpload(chapterNum, { files: files });
+    }
+}
+
+function handleFileUpload(chapterNum, input) {
+    const fileList = document.getElementById(`file-list-${chapterNum}`);
+    const files = input.files;
+    
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Validate file size (max 50MB)
+        if (file.size > 50 * 1024 * 1024) {
+            alert(`File ${file.name} is too large. Maximum size is 50MB.`);
+            continue;
+        }
+        
+        // Validate file type
+        const allowedTypes = [
+            'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'video/mp4', 'video/webm', 'image/jpeg', 'image/png', 'image/gif', 'text/plain',
+            'application/zip', 'application/x-zip-compressed'
+        ];
+        
+        if (!allowedTypes.includes(file.type) && !file.name.endsWith('.py')) {
+            alert(`File type ${file.type} is not supported. Please upload PDF, DOC, PPT, MP4, Images, or ZIP files.`);
+            continue;
+        }
+        
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        fileItem.innerHTML = `
+            <span>
+                <i class="fa fa-file"></i> ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)
+            </span>
+            <button type="button" class="remove-file" onclick="removeFile(this)">
+                <i class="fa fa-times"></i>
+            </button>
+        `;
+        fileList.appendChild(fileItem);
+    }
+}
+
+function removeChapter(chapterNum) {
+    const chapterDiv = document.getElementById(`chapter-${chapterNum}`);
+    if (chapterDiv) {
+        chapterDiv.remove();
+    }
+}
+
+function removeFile(button) {
+    button.parentNode.remove();
+}
+
+function previewCourse() {
+    const formData = new FormData(document.getElementById('course-form'));
+    const previewContent = document.getElementById('previewContent');
+    previewContent.innerHTML = ''; // Clear previous preview
+
+    // Display basic course info
+    previewContent.innerHTML += `
+        <h4 style="color: #1e3a8a; margin-bottom: 1rem;">Basic Course Information</h4>
+        <p><strong>Title:</strong> ${formData.get('title')}</p>
+        <p><strong>Description:</strong> ${formData.get('description')}</p>
+        <p><strong>Meeting Link:</strong> ${formData.get('meeting_link') || 'N/A'}</p>
+    `;
+
+    // Display course structure
+    previewContent.innerHTML += `
+        <h4 style="color: #1e3a8a; margin-bottom: 1rem;">Course Structure</h4>
+        <p><strong>Outline:</strong></p>
+        <ul>
+            ${Array.from(document.querySelectorAll('#outline-fields input')).map(i => `<li>${i.value}</li>`).join('')}
+        </ul>
+        <p><strong>Learning Objectives:</strong></p>
+        <ul>
+            ${Array.from(document.querySelectorAll('#objectives-fields input')).map(i => `<li>${i.value}</li>`).join('')}
+        </ul>
+    `;
+
+    // Display chapters
+    previewContent.innerHTML += `
+        <h4 style="color: #1e3a8a; margin-bottom: 1rem;">Chapter Files & Resources</h4>
+    `;
+    const chapters = document.querySelectorAll('#chapters-container .chapter-section');
+    chapters.forEach((chapter, index) => {
+        const chapterTitle = chapter.querySelector('input[name^="chapter_title_"]').value;
+        previewContent.innerHTML += `
+            <h5 style="margin: 0; color: #1e3a8a;">Chapter ${index + 1}: ${chapterTitle}</h5>
+            <p>Files:</p>
+            <ul>
+                ${Array.from(chapter.querySelectorAll('.file-list .file-item')).map(item => `<li>${item.textContent}</li>`).join('')}
+            </ul>
+        `;
+    });
+
+    // Display reference file
+    const referenceFile = formData.get('reference_file');
+    if (referenceFile) {
+        previewContent.innerHTML += `
+            <h4 style="color: #1e3a8a; margin-bottom: 1rem;">Reference Files (Optional)</h4>
+            <p><strong>Python Reference File:</strong> ${referenceFile.name}</p>
+        `;
+    }
+
+    document.getElementById('previewModal').style.display = 'block';
+}
+
+function closePreview() {
+    document.getElementById('previewModal').style.display = 'none';
+}
+
+// Initialize form
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('outline-fields').children.length === 0) addOutlineField();
+        if (document.getElementById('objectives-fields').children.length === 0) addObjectiveField();
+    
+    // Add first chapter by default
+    addChapter();
+    
+    // Update progress indicator
+    updateProgress();
+    
+    // Add event listeners for progress updates
+    document.querySelectorAll('input, textarea').forEach(input => {
+        input.addEventListener('input', updateProgress);
+    });
+    
+    document.querySelector('#course-form').addEventListener('submit', function(e) {
+            // Collect outline fields
+            var outlineVals = Array.from(document.querySelectorAll('#outline-fields input')).map(i => i.value.trim()).filter(Boolean);
+            document.getElementById('outline-hidden').value = outlineVals.join('\n');
+        
+            // Collect objectives fields
+            var objVals = Array.from(document.querySelectorAll('#objectives-fields input')).map(i => i.value.trim()).filter(Boolean);
+            document.getElementById('objectives-hidden').value = objVals.join('\n');
+        
+            // Validate at least one for each
+            if (outlineVals.length === 0 || objVals.length === 0) {
+                e.preventDefault();
+                alert('Please add at least one topic and one objective.');
+            return;
+        }
+        
+        // Validate chapters have titles
+        const chapterTitles = Array.from(document.querySelectorAll('[name^="chapter_title_"]')).map(i => i.value.trim()).filter(Boolean);
+        if (chapterTitles.length === 0) {
+            e.preventDefault();
+            alert('Please add at least one chapter with a title.');
+            return;
+        }
+        
+        // Final validation
+        if (!validateForm()) {
+            e.preventDefault();
+            return;
+            }
+        });
+        });
+
+function updateProgress() {
+    const basicInfo = document.querySelector('input[name="title"]').value.trim() && 
+                     document.querySelector('textarea[name="description"]').value.trim();
+    
+    const structure = document.querySelectorAll('#outline-fields input').length > 0 && 
+                     document.querySelectorAll('#objectives-fields input').length > 0;
+    
+    const files = document.querySelectorAll('.file-item').length > 0;
+    
+    const ready = basicInfo && structure && files;
+    
+    // Update progress indicators
+    updateProgressStep('progress-basic', basicInfo);
+    updateProgressStep('progress-structure', structure);
+    updateProgressStep('progress-files', files);
+    updateProgressStep('progress-ready', ready);
+}
+
+function updateProgressStep(elementId, completed) {
+    const element = document.getElementById(elementId);
+    if (completed) {
+        element.style.background = '#d1fae5';
+        element.style.color = '#065f46';
+    } else {
+        element.style.background = '#e5e7eb';
+        element.style.color = '#6b7280';
+    }
+}
+
+function validateForm() {
+    const title = document.querySelector('input[name="title"]').value.trim();
+    const description = document.querySelector('textarea[name="description"]').value.trim();
+    const outlineFields = document.querySelectorAll('#outline-fields input');
+    const objectiveFields = document.querySelectorAll('#objectives-fields input');
+    const chapters = document.querySelectorAll('.chapter-section');
+    
+    let errors = [];
+    
+    if (!title) errors.push('Course title is required');
+    if (!description) errors.push('Course description is required');
+    if (outlineFields.length === 0) errors.push('At least one course outline topic is required');
+    if (objectiveFields.length === 0) errors.push('At least one learning objective is required');
+    if (chapters.length === 0) errors.push('At least one chapter is required');
+    
+    // Check if chapters have titles
+    chapters.forEach((chapter, index) => {
+        const titleInput = chapter.querySelector('input[name^="chapter_title_"]');
+        if (!titleInput.value.trim()) {
+            errors.push(`Chapter ${index + 1} must have a title`);
+        }
+    });
+    
+    if (errors.length > 0) {
+        alert('Please fix the following errors:\n\n' + errors.join('\n'));
+        return false;
+    }
+    
+    return true;
+}
+    </script>
+{% endblock %}

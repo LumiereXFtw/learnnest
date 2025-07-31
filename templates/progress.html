@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnNest - Course Progress</title>
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            color: #4CAF50 !important;
+        }
+        .main-container {
+            max-width: 1200px;
+            margin: 32px auto 0 auto;
+            padding: 0 10px;
+        }
+        .progress-header {
+            background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 36px 24px 24px 24px;
+            margin: 32px auto 24px auto;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(59,130,246,0.10);
+        }
+        .progress-header .icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .progress-header .title {
+            font-size: 2.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .progress-header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+        .card-section {
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(16px);
+            border-radius: 18px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            margin-bottom: 32px;
+            padding: 28px 32px;
+        }
+        .assignments-list {
+            list-style: none;
+            padding: 0;
+        }
+        .assignments-list li {
+            background: linear-gradient(135deg,#f0fdf4 0%,#d1fae5 100%);
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(16,185,129,0.07);
+            padding: 18px 22px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .actions, .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        .badge-status {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.98em;
+            font-weight: 500;
+        }
+        .badge-success { background: #10b981; color: white; }
+        .badge-danger { background: #ef4444; color: white; }
+        .submit-btn, .edit-btn, .delete-btn, .copy-btn, .download-link, .view-details-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.98em;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: 500;
+            margin-right: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        .edit-btn { background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%); }
+        .delete-btn { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .copy-btn { background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%); color: #0f172a; }
+        .submit-btn:hover, .edit-btn:hover, .delete-btn:hover, .copy-btn:hover, .download-link:hover, .view-details-btn:hover { opacity: 0.85; }
+        table {
+            width: 100%;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(99,102,241,0.07);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        th, td { padding: 1rem; text-align: left; }
+        th {
+            background: linear-gradient(135deg,#e0e7ef 0%,#f3f4f6 100%);
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+        tr:nth-child(even) { background: #f8fafc; }
+        tr:hover td { background: #dbeafe; }
+        .avatar-cell img { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; box-shadow: 0 2px 8px rgba(59,130,246,0.10); }
+        .ai-feedback-pop { color: #06b6d4; cursor: pointer; }
+        .flash-messages { color: #dc2626; list-style: none; padding: 0; margin-bottom: 12px; width: 100%; text-align: center; }
+        form#submit-assignment-form {
+            margin-bottom: 24px;
+        }
+        @media (max-width: 900px) {
+            .main-container { padding: 0 2px; }
+            .card-section { padding: 16px 4px; }
+            th, td { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+      <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="/home">
+          <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="LearnNest Logo" style="height:36px;margin-right:10px;">
+          LearnNest
+        </a>
+      </div>
+    </nav>
+    <div class="main-container">
+      <div class="progress-header">
+        <div class="icon"><i class="fa fa-chart-line"></i></div>
+        <div class="title">Course Progress</div>
+        <div class="subtitle">Track your assignments, grades, and progress in one place</div>
+      </div>
+      <div style="display:flex;align-items:center;margin-bottom:16px;">
+        <img src="/{{ creator_avatar }}" alt="creator avatar" style="width:40px;height:40px;border-radius:50%;margin-right:12px;box-shadow:0 2px 8px rgba(59,130,246,0.10);">
+        <span style="font-size:1.2em;font-weight:bold;">{{ creator_display_name }}</span>
+      </div>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <ul class="flash-messages">
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+      <div class="card-section">
+        <h1 style="font-size:1.5rem;color:#1e3a8a;margin-bottom:1.2rem;">{{ course_title }} Progress</h1>
+        {% if is_enrolled %}
+          <h2 style="font-size:1.2rem;color:#10b981;">Submit Assignment</h2>
+          {% if reference_file %}
+            <form id="submit-assignment-form" method="POST" action="{{ url_for('submit_assignment', course_id=course_id) }}" enctype="multipart/form-data" onsubmit="confirmSubmission(event)">
+              <label for="assignment_name">Assignment Name:</label><br>
+              <input type="text" id="assignment_name" name="assignment_name" required><br><br>
+              <label for="file">Upload File (PDF, TXT, PY):</label><br>
+              <input type="file" id="file" name="file"><br><br>
+              <button type="submit" class="submit-btn">Submit Assignment</button>
+            </form>
+          {% else %}
+            <p>Assignment submission is disabled until the course creator uploads a reference Python file for AI grading.</p>
+          {% endif %}
+        {% endif %}
+        <div class="button-group">
+          <a href="{{ url_for('live_chat', course_id=course_id) }}" class="submit-btn" title="Join the real-time course chat room">💬 Join Live Chat</a>
+        </div>
+        <h2 style="font-size:1.2rem;color:#6366f1;margin-top:2rem;">Assignments</h2>
+        <div class="button-group">
+          {% if is_creator %}
+            <a href="{{ url_for('create_assignment', course_id=course_id) }}" class="submit-btn">Create Assignment</a>
+          {% endif %}
+        </div>
+        <ul class="assignments-list">
+          {% for assignment in assignments %}
+            <li>
+              <div style="flex:2;">
+                <span style="font-size:1.08em;font-weight:500;color:#047857;">{{ assignment['name'] }}</span> <span style="color:#64748b;font-size:0.98em;">({{ assignment['type']|capitalize }})</span> - <span style="color:#374151;">Due: {{ assignment['due_date'] or 'N/A' }}</span>
+                {% if assignment['meeting_link'] %}
+                  <br>
+                  <a href="{{ assignment['meeting_link'] }}" target="_blank" rel="noopener" class="copy-btn">Join Live Session</a>
+                  <button type="button" class="copy-btn" onclick="copyMeetingLink('{{ assignment['meeting_link'] }}', this)">Copy Link</button>
+                {% endif %}
+                <a href="/calendar/assignment/{{ assignment['id'] }}.ics" class="submit-btn" title="Add this assignment to your calendar">📅 Add to Calendar</a>
+              </div>
+              <div class="actions button-group">
+                {% if not is_creator %}
+                  <span class="badge-status {{ 'badge-success' if assignment_status[assignment['id']] == 'Submitted' else 'badge-danger' }}">
+                    {{ assignment_status[assignment['id']] }}
+                  </span>
+                  <a href="{{ url_for('submit_assignment_new', course_id=course_id, assignment_id=assignment['id']) }}" class="submit-btn">Submit</a>
+                {% else %}
+                  <a href="{{ url_for('edit_assignment', course_id=course_id, assignment_id=assignment['id']) }}" class="edit-btn">Edit</a>
+                  <a href="{{ url_for('delete_assignment', course_id=course_id, assignment_id=assignment['id']) }}" class="delete-btn" onclick="return confirm('Delete this assignment?');">Delete</a>
+                {% endif %}
+              </div>
+            </li>
+          {% else %}
+            <li>No assignments available.</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="card-section">
+        <h2 style="font-size:1.2rem;color:#6366f1;margin-bottom:1.2rem;">Progress</h2>
+        {% if progress_data %}
+          <table>
+            <tr>
+              <th>Avatar</th>
+              <th>Username</th>
+              <th>Assignment</th>
+              <th>Status</th>
+              <th>Grade</th>
+              <th>AI Grade</th>
+              {% if is_creator %}
+                <th>File</th>
+                <th>Actions</th>
+              {% endif %}
+            </tr>
+            {% for data in progress_data %}
+              <tr>
+                <td class="avatar-cell"><img src="/{{ data[7] if data|length > 7 and data[7] else 'static/default_avatar.png' }}" alt="avatar" onclick="window.location='/profile?user='+encodeURIComponent('{{ data[1] }}')"></td>
+                <td><span style="cursor:pointer;color:#4CAF50;" onclick="window.location='/profile?user='+encodeURIComponent('{{ data[1] }}')">{{ data[1] }}</span></td>
+                <td>{{ data[2] }}</td>
+                <td>{{ data[3] }}</td>
+                <td>{{ data[4] if data[4] is not none else 'Not graded' }}</td>
+                <td>{{ data[6] if data[6] is not none else 'N/A' }}</td>
+                {% if is_creator %}
+                  <td>
+                    {% if data[5] %}
+                      <a href="{{ url_for('download_assignment', course_id=course_id, progress_id=data[0]) }}" class="download-link">Download</a>
+                    {% else %}
+                      No file
+                    {% endif %}
+                  </td>
+                  <td>
+                    <form id="edit-progress-form-{{ data[0] }}" method="POST" action="{{ url_for('edit_progress', course_id=course_id, progress_id=data[0]) }}" onsubmit="confirmEdit(event)">
+                      <select name="status">
+                        <option value="submitted" {% if data[3] == 'submitted' %}selected{% endif %}>Submitted</option>
+                        <option value="completed" {% if data[3] == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="incomplete" {% if data[3] == 'incomplete' %}selected{% endif %}>Incomplete</option>
+                      </select>
+                      <input type="number" name="grade" min="0" max="100" value="{{ data[4] if data[4] is not none else '' }}" placeholder="Grade (0-100)">
+                      <button type="submit" class="edit-btn">Update</button>
+                    </form>
+                  </td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+          </table>
+        {% else %}
+          <p>No progress data available.</p>
+        {% endif %}
+      </div>
+      <div id="ai-details-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:white;padding:24px;border-radius:10px;max-width:90vw;max-height:80vh;overflow:auto;box-shadow:0 2px 12px rgba(0,0,0,0.18);">
+          <h3>AI Feedback Details</h3>
+          <div id="ai-details-content" style="font-size:1.08em;"></div>
+          <button onclick="closeAIDetails()" style="margin-top:18px;">Close</button>
+        </div>
+      </div>
+    </div>
+    <footer class="footer">
+      <div>
+        <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
+        <a href="https://facebook.com/" target="_blank"><i class="fab fa-facebook"></i></a>
+        <a href="https://linkedin.com/" target="_blank"><i class="fab fa-linkedin"></i></a>
+        <a href="https://github.com/" target="_blank"><i class="fab fa-github"></i></a>
+      </div>
+      <div class="mt-2">&copy; {{ 2024 }} LearnNest. All rights reserved.</div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
+    <script>
+        function confirmSubmission(event) {
+            if (!confirm('Are you sure you want to submit this assignment?')) {
+                event.preventDefault();
+            }
+        }
+        function confirmEdit(event) {
+            if (!confirm('Are you sure you want to update this progress?')) {
+                event.preventDefault();
+            }
+        }
+        function copyMeetingLink(link, btn) {
+            navigator.clipboard.writeText(link).then(function() {
+                showToast('Meeting link copied!');
+                btn.textContent = 'Copied!';
+                setTimeout(function() { btn.textContent = 'Copy Link'; }, 1500);
+            });
+        }
+        const socket = io();
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'show';
+            setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 3500);
+        }
+        socket.on('new_notification', function(data) {
+            showToast('🔔 ' + data.message);
+            setTimeout(() => { location.reload(); }, 2000);
+        });
+        tippy('.ai-feedback-pop', { theme: 'light', placement: 'top', interactive: true });
+        function showAIDetails(feedback) {
+            let content = '';
+            if (typeof feedback === 'string') {
+                content = feedback.replace(/\n/g, '<br>');
+            } else if (feedback && typeof feedback === 'object') {
+                content = JSON.stringify(feedback, null, 2);
+            } else {
+                content = '<span style="color:#888;">No AI feedback available.</span>';
+            }
+            document.getElementById('ai-details-content').innerHTML = content;
+            document.getElementById('ai-details-modal').style.display = 'flex';
+        }
+        function closeAIDetails() {
+            document.getElementById('ai-details-modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

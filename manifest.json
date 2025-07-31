@@ -1,0 +1,13 @@
+{
+  "name": "LearnNest",
+  "short_name": "LearnNest",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f7f7",
+  "theme_color": "#4CAF50",
+  "description": "Modern learning platform for students and creators.",
+  "icons": [
+    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+} 

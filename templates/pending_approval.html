@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Pending Approval - LearnNest</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .approval-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .approval-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .status-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3);
+        }
+        
+        .status-icon i {
+            font-size: 36px;
+            color: #fff;
+        }
+        
+        .approval-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 16px;
+        }
+        
+        .approval-subtitle {
+            font-size: 1.1rem;
+            color: #718096;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .info-box h5 {
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .info-box p {
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .contact-info {
+            background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #81e6d9;
+        }
+        
+        .contact-info h6 {
+            color: #2c7a7b;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .contact-info p {
+            color: #4a5568;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 32px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-1px);
+        }
+        
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            margin: 32px 0;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 0 16px;
+        }
+        
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-right: 8px;
+        }
+        
+        .step-completed {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .step-current {
+            background: #ffd700;
+            color: #2d3748;
+        }
+        
+        .step-pending {
+            background: #e2e8f0;
+            color: #718096;
+        }
+        
+        .step-text {
+            font-size: 0.85rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .approval-card {
+                padding: 24px;
+                margin: 10px;
+            }
+            
+            .approval-title {
+                font-size: 1.5rem;
+            }
+            
+            .progress-indicator {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .step {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="approval-container">
+        <div class="approval-card">
+            <div class="status-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            
+            <h1 class="approval-title">Account Pending Approval</h1>
+            <p class="approval-subtitle">
+                {{ message or 'Your instructor registration is currently under review by our admin team. We\'ll notify you once your account is approved.' }}
+            </p>
+            
+            <div class="progress-indicator">
+                <div class="step">
+                    <div class="step-circle step-completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <span class="step-text">Registration Complete</span>
+                </div>
+                <div class="step">
+                    <div class="step-circle step-current">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <span class="step-text">Under Review</span>
+                </div>
+                <div class="step">
+                    <div class="step-circle step-pending">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <span class="step-text">Approved</span>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <h5><i class="fas fa-info-circle text-primary"></i> What happens next?</h5>
+                <p><strong>1.</strong> Our admin team will review your application within 24-48 hours</p>
+                <p><strong>2.</strong> We'll verify your payment and institution details</p>
+                <p><strong>3.</strong> You'll receive an email notification once approved</p>
+                <p><strong>4.</strong> You can then log in and start creating courses</p>
+            </div>
+            
+            <div class="contact-info">
+                <h6><i class="fas fa-envelope text-success"></i> Need help?</h6>
+                <p>If you have any questions about your application, please contact us:</p>
+                <p><strong>Email:</strong> support@learnnest.com</p>
+                <p><strong>Response time:</strong> Within 24 hours</p>
+            </div>
+            
+            <div class="mt-4">
+                <a href="{{ url_for('login') }}" class="btn btn-primary me-3">
+                    <i class="fas fa-sign-in-alt"></i> Back to Login
+                </a>
+                <a href="{{ url_for('register_instructor') }}" class="btn btn-secondary">
+                    <i class="fas fa-edit"></i> Update Application
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<style>
+    .admin-dashboard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    .dashboard-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-4px);
+    }
+    .stat-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        border-left: 4px solid #3b82f6;
+    }
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        margin-bottom: 0.5rem;
+    }
+    .stat-label {
+        color: #64748b;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    .trend-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+    }
+    .trend-title {
+        color: #1e3a8a;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+    }
+    .activity-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    .course-item {
+        padding: 0.75rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .user-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .user-item:last-child {
+        border-bottom: none;
+    }
+    .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .badge-student {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    .badge-instructor {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    .badge-admin {
+        background: #fecaca;
+        color: #991b1b;
+    }
+    .chart-container {
+        height: 200px;
+        background: #f8fafc;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-style: italic;
+    }
+</style>
+
+<nav>
+    <a href="{{ url_for('home') }}">Home</a>
+    {% if current_user.is_authenticated %}
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <a href="{{ url_for('pending_approvals') }}">Pending Approvals</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Register</a>
+    {% endif %}
+</nav>
+
+<main class="admin-dashboard">
+    <div class="container">
+        <div class="dashboard-card">
+            <h1 style="color: #1e3a8a; text-align: center; margin-bottom: 2rem;">
+                <i class="fa fa-chart-line"></i> Admin Dashboard
+            </h1>
+            
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="alert alert-info">
+                        {% for message in messages %}
+                            <div>{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Platform Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ total_students }}</div>
+                        <div class="stat-label">Total Students</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ total_instructors }}</div>
+                        <div class="stat-label">Total Instructors</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ total_courses }}</div>
+                        <div class="stat-label">Total Courses</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ total_enrollments }}</div>
+                        <div class="stat-label">Total Enrollments</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pending Approvals -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="trend-card">
+                        <div class="trend-title">
+                            <i class="fa fa-clock"></i> Pending Approvals
+                        </div>
+                        <div class="activity-item">
+                            <span>Pending Students</span>
+                            <span class="badge badge-student">{{ pending_students }}</span>
+                        </div>
+                        <div class="activity-item">
+                            <span>Pending Instructors</span>
+                            <span class="badge badge-instructor">{{ pending_instructors }}</span>
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem;">
+                            <a href="{{ url_for('pending_approvals') }}" class="btn btn-primary">
+                                <i class="fa fa-eye"></i> View All Pending
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="trend-card">
+                        <div class="trend-title">
+                            <i class="fa fa-trophy"></i> Top Courses by Enrollment
+                        </div>
+                        {% if top_courses %}
+                            {% for course in top_courses %}
+                                <div class="course-item">
+                                    <span>{{ course[0] }}</span>
+                                    <span class="badge badge-student">{{ course[1] }} enrollments</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p style="color: #64748b; text-align: center; font-style: italic;">No courses yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="trend-card">
+                        <div class="trend-title">
+                            <i class="fa fa-users"></i> Recent User Registrations
+                        </div>
+                        {% if recent_users %}
+                            {% for user in recent_users %}
+                                <div class="user-item">
+                                    <div>
+                                        <strong>{{ user[0] }}</strong>
+                                        <span class="badge badge-{{ user[1] }}">{{ user[1]|title }}</span>
+                                    </div>
+                                    <small style="color: #64748b;">{{ user[2] or 'N/A' }}</small>
+                                </div>
+            {% endfor %}
+                        {% else %}
+                            <p style="color: #64748b; text-align: center; font-style: italic;">No recent registrations</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="trend-card">
+                        <div class="trend-title">
+                            <i class="fa fa-chart-area"></i> Platform Trends (Last 30 Days)
+                        </div>
+                        <div class="chart-container">
+                            <div style="text-align: center;">
+                                <i class="fa fa-chart-line fa-2x" style="margin-bottom: 1rem;"></i>
+                                <p>Course Creation: {{ course_trends|length }} days with activity</p>
+                                <p>Enrollments: {{ enrollment_trends|length }} days with activity</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    </div>
+            
+            <!-- Instructor Management -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="trend-card">
+                        <div class="trend-title">
+                            <i class="fa fa-user-tie"></i> Instructor Management
+        </div>
+                        {% if approved_instructors %}
+                            <div class="table-responsive">
+                                <table class="table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                                            <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                                        {% for instructor in approved_instructors %}
+                    <tr>
+                                                <td>{{ instructor[1] }}</td>
+                                                <td>{{ instructor[2] or 'N/A' }}</td>
+                                                <td>{{ instructor[3] or 'N/A' }}</td>
+                        <td>
+                                                    {% if instructor[4] %}
+                                                        <span class="badge badge-danger">Blocked</span>
+                                                    {% else %}
+                                                        <span class="badge badge-success">Active</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                                                    {% if instructor[4] %}
+                                                        <form method="POST" action="{{ url_for('unblock_user', user_id=instructor[0]) }}" style="display: inline;">
+                                                            <button type="submit" class="btn btn-success btn-sm">
+                                                                <i class="fa fa-unlock"></i> Unblock
+                                                            </button>
+                            </form>
+                                                    {% else %}
+                                                        <form method="POST" action="{{ url_for('block_user', user_id=instructor[0]) }}" style="display: inline;">
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="fa fa-ban"></i> Block
+                                                            </button>
+                            </form>
+                                                    {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+                            </div>
+                        {% else %}
+                            <p style="color: #64748b; text-align: center; font-style: italic;">No approved instructors found</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="trend-card">
+                        <div class="trend-title">
+                            <i class="fa fa-bolt"></i> Quick Actions
+                        </div>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <a href="{{ url_for('pending_approvals') }}" class="btn btn-primary">
+                                <i class="fa fa-check-circle"></i> Manage Approvals
+                            </a>
+                            <a href="{{ url_for('user_directory') }}" class="btn btn-info">
+                                <i class="fa fa-users"></i> View All Users
+                            </a>
+                            <a href="{{ url_for('home') }}" class="btn btn-success">
+                                <i class="fa fa-home"></i> View Courses
+                            </a>
+                            <a href="{{ url_for('export_analytics') }}" class="btn btn-warning">
+                                <i class="fa fa-download"></i> Export Analytics
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %} 

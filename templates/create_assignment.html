@@ -1,0 +1,413 @@
+{% extends 'base.html' %}
+{% block title %}Create Assignment{% endblock %}
+{% block content %}
+<style>
+    .assignment-create-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    .assignment-create-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        padding: 2.5rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .assignment-create-title {
+        color: #1e3a8a;
+        text-align: center;
+        margin-bottom: 2rem;
+        font-weight: 700;
+        font-size: 2.2rem;
+    }
+    .assignment-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #f9fafb;
+    }
+    .section-title {
+        color: #1e3a8a;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .form-control {
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    .mcq-question-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    .mcq-question-card:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    }
+    .mcq-question-card .remove-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .mcq-question-card .remove-btn:hover {
+        background: #dc2626;
+        transform: scale(1.1);
+    }
+    .option-input {
+        margin-bottom: 0.75rem;
+    }
+    .option-input input {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    .option-input input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+    .add-question-btn {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .add-question-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .submit-btn {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 1rem;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+    }
+    .info-box {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-left: 4px solid #3b82f6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .progress-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 12px;
+    }
+    .progress-step {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: #64748b;
+    }
+    .progress-step.active {
+        color: #3b82f6;
+        font-weight: 600;
+    }
+    .progress-step.completed {
+        color: #10b981;
+    }
+    .progress-step i {
+        font-size: 1.1rem;
+    }
+</style>
+
+<main class="assignment-create-bg">
+    <div class="assignment-create-card">
+        <h1 class="assignment-create-title">
+            <i class="fa fa-edit"></i> Create Assignment
+        </h1>
+        
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+            <div class="progress-step completed">
+                <i class="fa fa-check-circle"></i>
+                <span>Basic Info</span>
+            </div>
+            <div class="progress-step active">
+                <i class="fa fa-question-circle"></i>
+                <span>Questions</span>
+            </div>
+            <div class="progress-step">
+                <i class="fa fa-calendar"></i>
+                <span>Settings</span>
+            </div>
+        </div>
+        
+        <form method="POST" id="assignment-form">
+            <!-- Basic Information Section -->
+            <div class="assignment-section">
+                <div class="section-title">
+                    <i class="fa fa-info-circle"></i>
+                    Basic Information
+                </div>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Assignment Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" required 
+                                   placeholder="Enter assignment title">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Assignment Type *</label>
+                            <select class="form-control" id="type" name="type" onchange="toggleFields()" required>
+                                <option value="">Select Type</option>
+                                <option value="mcq">Multiple Choice</option>
+                                <option value="text">Text Response</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MCQ Questions Section -->
+            <div id="mcq-fields" style="display:none;">
+                <div class="assignment-section">
+                    <div class="section-title">
+                        <i class="fa fa-list-ul"></i>
+                        Multiple Choice Questions
+                    </div>
+                    <div class="info-box">
+                        <i class="fa fa-lightbulb"></i>
+                        <strong>Tips:</strong> Create clear, concise questions with 4 options each. Select the correct answer for automatic grading.
+                    </div>
+                    <div id="mcq-pairs"></div>
+                    <button type="button" onclick="addMCQPair()" class="add-question-btn">
+                        <i class="fa fa-plus"></i>
+                        Add Question
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Text Response Section -->
+            <div id="text-fields" style="display:none;">
+                <div class="assignment-section">
+                    <div class="section-title">
+                        <i class="fa fa-file-text"></i>
+                        Text Response Assignment
+                    </div>
+                    <div class="info-box">
+                        <i class="fa fa-lightbulb"></i>
+                        <strong>Tips:</strong> Provide clear instructions and specify keywords for AI-powered grading.
+                    </div>
+                    <div class="mb-3">
+                        <label for="questions" class="form-label">Question/Prompt *</label>
+                        <textarea class="form-control" id="questions" name="questions" rows="4" 
+                                  placeholder="Enter the question or prompt for students..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="keywords" class="form-label">Keywords for Grading</label>
+                        <input type="text" class="form-control" id="keywords" name="keywords" 
+                               placeholder="Enter keywords separated by commas (e.g., algorithm, efficiency, optimization)">
+                        <small class="form-text text-muted">These keywords will be used for AI-powered grading</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Section -->
+            <div class="assignment-section">
+                <div class="section-title">
+                    <i class="fa fa-cog"></i>
+                    Assignment Settings
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="due_date" class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="due_date" name="due_date">
+                            <small class="form-text text-muted">Optional: Set a deadline for submissions</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="chapter" class="form-label">Chapter *</label>
+                            <select name="chapter" class="form-control" required>
+                                <option value="">Select Chapter</option>
+                                <option value="0">Chapter 1</option>
+                                <option value="1">Chapter 2</option>
+                                <option value="2">Chapter 3</option>
+                                <option value="3">Chapter 4</option>
+                                <option value="4">Chapter 5</option>
+                            </select>
+                            <small class="form-text text-muted">Students will only see assignments for unlocked chapters</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn">
+                <i class="fa fa-save"></i>
+                Create Assignment
+            </button>
+        </form>
+    </div>
+</main>
+
+<script>
+function toggleFields() {
+    var type = document.getElementById('type').value;
+    document.getElementById('mcq-fields').style.display = (type === 'mcq') ? 'block' : 'none';
+    document.getElementById('text-fields').style.display = (type === 'text') ? 'block' : 'none';
+    
+    // Update progress indicator
+    updateProgress();
+}
+
+function addMCQPair(qdata) {
+    var container = document.getElementById('mcq-pairs');
+    var idx = container.children.length;
+    var pairDiv = document.createElement('div');
+    pairDiv.className = 'mcq-question-card';
+    pairDiv.innerHTML = `
+        <button type="button" class="remove-btn" onclick="this.parentNode.remove(); updateProgress();">
+            <i class="fa fa-times"></i>
+        </button>
+        <div class="mb-3">
+            <label class="form-label"><strong>Question ${idx + 1} *</strong></label>
+            <input type="text" class="form-control" name="question_${idx}" required 
+                   value="${qdata ? qdata.question : ''}" 
+                   placeholder="Enter your question here...">
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="option-input">
+                    <label class="form-label">Option A *</label>
+                    <input type="text" class="form-control" name="option_${idx}_0" required 
+                           value="${qdata ? qdata.options[0] : ''}" placeholder="Option A">
+                </div>
+                <div class="option-input">
+                    <label class="form-label">Option B *</label>
+                    <input type="text" class="form-control" name="option_${idx}_1" required 
+                           value="${qdata ? qdata.options[1] : ''}" placeholder="Option B">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="option-input">
+                    <label class="form-label">Option C *</label>
+                    <input type="text" class="form-control" name="option_${idx}_2" required 
+                           value="${qdata ? qdata.options[2] : ''}" placeholder="Option C">
+                </div>
+                <div class="option-input">
+                    <label class="form-label">Option D *</label>
+                    <input type="text" class="form-control" name="option_${idx}_3" required 
+                           value="${qdata ? qdata.options[3] : ''}" placeholder="Option D">
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <label class="form-label"><strong>Correct Answer *</strong></label>
+            <select name="correct_${idx}" required class="form-control" style="width: auto;">
+                <option value="">Select correct answer</option>
+                <option value="0">A</option>
+                <option value="1">B</option>
+                <option value="2">C</option>
+                <option value="3">D</option>
+            </select>
+        </div>
+    `;
+    container.appendChild(pairDiv);
+    updateProgress();
+}
+
+function updateProgress() {
+    const type = document.getElementById('type').value;
+    const name = document.getElementById('name').value;
+    const chapter = document.querySelector('select[name="chapter"]').value;
+    
+    // Update progress steps
+    const steps = document.querySelectorAll('.progress-step');
+    
+    if (name) {
+        steps[0].classList.add('completed');
+        steps[0].classList.remove('active');
+    } else {
+        steps[0].classList.remove('completed');
+        steps[0].classList.add('active');
+    }
+    
+    if (type && ((type === 'mcq' && document.getElementById('mcq-pairs').children.length > 0) || 
+                  (type === 'text' && document.getElementById('questions').value))) {
+        steps[1].classList.add('completed');
+        steps[1].classList.remove('active');
+        steps[2].classList.add('active');
+    } else {
+        steps[1].classList.remove('completed');
+        steps[1].classList.add('active');
+        steps[2].classList.remove('active');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    toggleFields();
+    
+    // Add event listeners for progress tracking
+    document.getElementById('name').addEventListener('input', updateProgress);
+    document.getElementById('type').addEventListener('change', updateProgress);
+    document.querySelector('select[name="chapter"]').addEventListener('change', updateProgress);
+    
+    // Add at least one MCQ question by default
+    if (document.getElementById('mcq-pairs').children.length === 0) {
+        addMCQPair();
+    }
+});
+</script>
+{% endblock %} 

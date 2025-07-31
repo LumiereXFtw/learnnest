@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending User Approvals - LearnNest Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .admin-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .admin-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .admin-header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+        
+        .admin-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(30,41,59,0.1);
+            opacity: 0.3;
+        }
+        
+        .admin-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .admin-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .admin-content {
+            padding: 30px;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            color: #4a5568;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .filter-btn:hover {
+            border-color: #4CAF50;
+            color: #4CAF50;
+            transform: translateY(-1px);
+        }
+        
+        .filter-btn.active {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+        }
+        
+        .approval-table {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border: none;
+            padding: 16px 12px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.9rem;
+        }
+        
+        .table tbody td {
+            padding: 16px 12px;
+            border: none;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background: #f8fafc;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .user-details h6 {
+            margin: 0;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95rem;
+        }
+        
+        .user-details small {
+            color: #718096;
+            font-size: 0.8rem;
+        }
+        
+        .role-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .role-creator {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .role-student {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .payment-screenshot {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .payment-screenshot:hover {
+            transform: scale(1.05);
+        }
+        
+        .payment-screenshot img {
+            max-width: 60px;
+            max-height: 60px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e2e8f0;
+        }
+        
+        .payment-screenshot .view-icon {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-approve {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 6px 16px;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-approve:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn-reject {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 6px 16px;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-reject:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(245, 101, 101, 0.3);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: #cbd5e0;
+            margin-bottom: 16px;
+        }
+        
+        .empty-state h5 {
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-1px);
+            color: white;
+            text-decoration: none;
+        }
+        
+        /* Modal for payment screenshot */
+        .modal-content {
+            border-radius: 16px;
+            border: none;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .modal-body {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .modal-body img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .admin-container {
+                margin: 20px auto;
+                padding: 0 10px;
+            }
+            
+            .admin-content {
+                padding: 20px;
+            }
+            
+            .filter-buttons {
+                justify-content: center;
+            }
+            
+            .table-responsive {
+                border-radius: 12px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-card">
+            <div class="admin-header">
+                <h1 class="admin-title">
+                    <i class="fas fa-user-clock"></i> Pending User Approvals
+                </h1>
+                <p class="admin-subtitle">Review and approve new instructor and student registrations</p>
+            </div>
+            
+            <div class="admin-content">
+                <div class="filter-buttons">
+                    <a href="{{ url_for('pending_approvals') }}" class="filter-btn {% if not role_filter %}active{% endif %}">
+                        <i class="fas fa-users"></i> All Users
+                    </a>
+                    <a href="{{ url_for('pending_approvals', role='student') }}" class="filter-btn {% if role_filter == 'student' %}active{% endif %}">
+                        <i class="fas fa-user-graduate"></i> Students
+                    </a>
+                    <a href="{{ url_for('pending_approvals', role='creator') }}" class="filter-btn {% if role_filter == 'creator' %}active{% endif %}">
+                        <i class="fas fa-chalkboard-teacher"></i> Instructors
+                    </a>
+                </div>
+                
+                {% if pending_users %}
+                <div class="approval-table">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Role</th>
+                                    <th>Contact Info</th>
+                                    <th>Institution</th>
+                                    <th>Payment</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in pending_users %}
+                                <tr>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-avatar">
+                                                {{ user[1][0].upper() }}
+                                            </div>
+                                            <div class="user-details">
+                                                <h6>{{ user[3] or user[1] }}</h6>
+                                                <small>@{{ user[1] }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="role-badge role-{{ user[2] }}">
+                                            {{ user[2] }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <small><i class="fas fa-envelope"></i> {{ user[4] or 'N/A' }}</small><br>
+                                            <small><i class="fas fa-phone"></i> {{ user[5] or 'N/A' }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small>{{ user[6] or 'N/A' }}</small>
+                                    </td>
+                                    <td>
+                                        {% if user[2] == 'creator' and user|length > 7 and user[7] %}
+                                        <div class="payment-screenshot" onclick="viewPayment('{{ user[7] }}', '{{ user[3] or user[1] }}')">
+                                            <img src="/{{ user[7] }}" alt="Payment Screenshot">
+                                            <div class="view-icon">
+                                                <i class="fas fa-eye"></i>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <small class="text-muted">N/A</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <form method="POST" action="{{ url_for('approve_user', user_id=user[0]) }}" style="display:inline;">
+                                                <button type="submit" class="btn-approve">
+                                                    <i class="fas fa-check"></i> Approve
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ url_for('reject_user', user_id=user[0]) }}" style="display:inline;">
+                                                <button type="submit" class="btn-reject">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-check-circle"></i>
+                    <h5>No pending approvals</h5>
+                    <p>All user registrations have been reviewed and processed.</p>
+                </div>
+                {% endif %}
+                
+                <a href="/home" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment Screenshot Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-credit-card"></i> Payment Screenshot
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="paymentImage" src="" alt="Payment Screenshot">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function viewPayment(imageSrc, userName) {
+            document.getElementById('paymentImage').src = '/' + imageSrc;
+            document.querySelector('#paymentModal .modal-title').innerHTML = 
+                '<i class="fas fa-credit-card"></i> Payment Screenshot - ' + userName;
+            new bootstrap.Modal(document.getElementById('paymentModal')).show();
+        }
+    </script>
+</body>
+</html> 

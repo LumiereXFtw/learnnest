@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% block title %}Submit Assignment{% endblock %}
+{% block content %}
+<style>
+    .assignment-submit-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    .assignment-submit-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        padding: 2.5rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .assignment-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #f1f5f9;
+    }
+    .assignment-title {
+        color: #1e3a8a;
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    .assignment-subtitle {
+        color: #64748b;
+        font-size: 1.1rem;
+    }
+    .assignment-info {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-left: 4px solid #3b82f6;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: #374151;
+    }
+    .info-item:last-child {
+        margin-bottom: 0;
+    }
+    .info-item i {
+        color: #3b82f6;
+        width: 20px;
+    }
+    .question-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    .question-card:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    }
+    .question-number {
+        position: absolute;
+        top: -10px;
+        left: 20px;
+        background: #3b82f6;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .question-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e3a8a;
+        margin-bottom: 1rem;
+        padding-top: 0.5rem;
+    }
+    .option-item {
+        background: #f8fafc;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .option-item:hover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+        transform: translateX(4px);
+    }
+    .option-item.selected {
+        border-color: #3b82f6;
+        background: #dbeafe;
+    }
+    .option-radio {
+        width: 20px;
+        height: 20px;
+        accent-color: #3b82f6;
+    }
+    .option-label {
+        font-weight: 500;
+        color: #374151;
+        flex: 1;
+    }
+    .option-letter {
+        background: #3b82f6;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .text-response-area {
+        background: #f8fafc;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .text-response-area:focus-within {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .text-response-textarea {
+        width: 100%;
+        border: none;
+        background: transparent;
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #374151;
+        resize: vertical;
+        min-height: 150px;
+        outline: none;
+    }
+    .submit-section {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-top: 2rem;
+        text-align: center;
+    }
+    .submit-btn {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+    }
+    .back-btn {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .back-btn:hover {
+        transform: translateY(-1px);
+        text-decoration: none;
+        color: white;
+    }
+    .progress-bar {
+        background: #e5e7eb;
+        border-radius: 10px;
+        height: 8px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+    .progress-fill {
+        background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.3s ease;
+    }
+    .timer {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #92400e;
+        font-weight: 600;
+    }
+</style>
+
+<main class="assignment-submit-bg">
+    <div class="assignment-submit-card">
+        <!-- Assignment Header -->
+        <div class="assignment-header">
+            <h1 class="assignment-title">
+                <i class="fa fa-edit"></i> {{ name }}
+            </h1>
+            <p class="assignment-subtitle">Submit your assignment answers below</p>
+        </div>
+        
+        <!-- Assignment Information -->
+        <div class="assignment-info">
+            <div class="info-item">
+                <i class="fa fa-file-text"></i>
+                <span><strong>Type:</strong> {{ type|title }} Assignment</span>
+            </div>
+            <div class="info-item">
+                <i class="fa fa-question-circle"></i>
+                <span><strong>Questions:</strong> {{ questions_list|length if type == 'mcq' else '1' }}</span>
+            </div>
+            {% if due_date %}
+            <div class="info-item">
+                <i class="fa fa-calendar"></i>
+                <span><strong>Due Date:</strong> {{ due_date }}</span>
+            </div>
+            {% endif %}
+            <div class="info-item">
+                <i class="fa fa-info-circle"></i>
+                <span><strong>Instructions:</strong> {{ 'Select the correct answer for each question' if type == 'mcq' else 'Provide a detailed response to the question' }}</span>
+            </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <span id="progress-text">0% Complete</span>
+        </div>
+        
+        <form method="post" id="assignment-form">
+            {% if type == 'mcq' %}
+                <!-- MCQ Questions -->
+                {% for q in questions_list %}
+                    {% set qidx = loop.index0 %}
+                    <div class="question-card">
+                        <div class="question-number">{{ loop.index }}</div>
+                        <div class="question-text">{{ q.question }}</div>
+                        <div class="options-container">
+                            {% for opt in q.options %}
+                                <div class="option-item" onclick="selectOption(this, 'q{{ qidx }}_opt{{ loop.index0 }}')">
+                                    <input class="option-radio" type="radio" name="answer_{{ qidx }}" 
+                                           id="q{{ qidx }}_opt{{ loop.index0 }}" value="{{ loop.index0 }}" required>
+                                    <div class="option-letter">{{ 'ABCD'[loop.index0] }}</div>
+                                    <label class="option-label" for="q{{ qidx }}_opt{{ loop.index0 }}">
+                                        {{ opt }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% elif type == 'text' %}
+                <!-- Text Response -->
+                <div class="text-response-area">
+                    <div style="margin-bottom: 1rem;">
+                        <h4 style="color: #1e3a8a; margin-bottom: 0.5rem;">
+                            <i class="fa fa-file-text"></i> Question
+                        </h4>
+                        <p style="color: #374151; font-size: 1.1rem; line-height: 1.6;">{{ questions }}</p>
+                    </div>
+                    <div>
+                        <label for="answer_text" class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                            Your Response *
+                        </label>
+                        <textarea id="answer_text" name="answer_text" class="text-response-textarea" 
+                                  placeholder="Enter your detailed response here..." required></textarea>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Submit Section -->
+            <div class="submit-section">
+                <div style="margin-bottom: 1rem;">
+                    <i class="fa fa-lightbulb" style="color: #f59e0b;"></i>
+                    <span style="color: #64748b; font-size: 0.9rem;">
+                        <strong>Tip:</strong> Review your answers before submitting. You cannot edit after submission.
+                    </span>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <i class="fa fa-paper-plane"></i>
+                    Submit Assignment
+                </button>
+                <br>
+                <a href="/course/{{ course_id }}/progress" class="back-btn">
+                    <i class="fa fa-arrow-left"></i>
+                    Back to Progress
+                </a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+function selectOption(optionElement, radioId) {
+    // Remove selected class from all options in this question
+    const questionCard = optionElement.closest('.question-card');
+    const allOptions = questionCard.querySelectorAll('.option-item');
+    allOptions.forEach(opt => opt.classList.remove('selected'));
+    
+    // Add selected class to clicked option
+    optionElement.classList.add('selected');
+    
+    // Check the radio button
+    document.getElementById(radioId).checked = true;
+    
+    // Update progress
+    updateProgress();
+}
+
+function updateProgress() {
+    let answeredQuestions = 0;
+    let totalQuestions = 0;
+    
+    // Check if this is MCQ or text assignment
+    const mcqQuestions = document.querySelectorAll('.question-card');
+    const textArea = document.getElementById('answer_text');
+    
+    if (mcqQuestions.length > 0) {
+        // MCQ assignment
+        totalQuestions = mcqQuestions.length;
+        mcqQuestions.forEach((questionCard, index) => {
+            const radioName = 'answer_' + index;
+            const selectedRadio = document.querySelector('input[name="' + radioName + '"]:checked');
+            if (selectedRadio) {
+                answeredQuestions++;
+            }
+        });
+    } else if (textArea) {
+        // Text assignment
+        totalQuestions = 1;
+        if (textArea.value.trim().length > 0) {
+            answeredQuestions = 1;
+        }
+    }
+    
+    const progressPercentage = totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0;
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    
+    if (progressFill && progressText) {
+        progressFill.style.width = progressPercentage + '%';
+        progressText.textContent = progressPercentage + '% Complete';
+        
+        // Change color based on progress
+        if (progressPercentage === 100) {
+            progressFill.style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
+        } else if (progressPercentage >= 50) {
+            progressFill.style.background = 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)';
+        } else {
+            progressFill.style.background = 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)';
+        }
+    }
+}
+
+// Add event listeners for progress tracking
+document.addEventListener('DOMContentLoaded', function() {
+    // For text response
+    const textArea = document.getElementById('answer_text');
+    if (textArea) {
+        textArea.addEventListener('input', updateProgress);
+    }
+    
+    // For MCQ questions
+    const radioButtons = document.querySelectorAll('input[type="radio"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', updateProgress);
+    });
+    
+    // Initial progress update
+    updateProgress();
+});
+
+// Form validation
+document.getElementById('assignment-form').addEventListener('submit', function(e) {
+    let answeredQuestions = 0;
+    let totalQuestions = 0;
+    
+    // Check if this is MCQ or text assignment
+    const mcqQuestions = document.querySelectorAll('.question-card');
+    const textArea = document.getElementById('answer_text');
+    
+    if (mcqQuestions.length > 0) {
+        // MCQ assignment
+        totalQuestions = mcqQuestions.length;
+        mcqQuestions.forEach((questionCard, index) => {
+            const radioName = 'answer_' + index;
+            const selectedRadio = document.querySelector('input[name="' + radioName + '"]:checked');
+            if (selectedRadio) {
+                answeredQuestions++;
+            }
+        });
+    } else if (textArea) {
+        // Text assignment
+        totalQuestions = 1;
+        if (textArea.value.trim().length > 0) {
+            answeredQuestions = 1;
+        }
+    }
+    
+    if (answeredQuestions < totalQuestions) {
+        e.preventDefault();
+        alert('Please answer all questions before submitting.');
+        return false;
+    }
+    
+    // Show confirmation
+    if (!confirm('Are you sure you want to submit this assignment? You cannot edit it after submission.')) {
+        e.preventDefault();
+        return false;
+    }
+});
+</script>
+{% endblock %} 

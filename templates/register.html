@@ -1,0 +1,246 @@
+{% if instructor_form %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnNest - Instructor Registration</title>
+    <style>
+        body { font-family: 'Roboto', Arial, sans-serif; margin: 0; padding: 0; min-height: 100vh; background: url('https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=1500&q=80') no-repeat center center fixed; background-size: cover; position: relative; }
+        .bg-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(30,41,59,0.65); z-index: 0; }
+        main { min-height: 80vh; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; }
+        .register-card { background: rgba(255,255,255,0.97); border-radius: 18px; box-shadow: 0 8px 32px rgba(59,130,246,0.18); padding: 38px 32px 28px 32px; max-width: 400px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+        .register-card h1 { font-size: 2rem; font-weight: 700; color: #1e3a8a; margin-bottom: 18px; letter-spacing: 1px; }
+        .form-container { width: 100%; }
+        label { display: block; margin-bottom: 10px; color: #374151; font-weight: 500; }
+        input { width: 100%; padding: 10px 12px; margin: 6px 0 16px 0; border-radius: 8px; border: 1px solid #d1d5db; font-size: 1em; background: #f3f4f6; box-sizing: border-box; transition: border 0.2s; }
+        input:focus { border: 1.5px solid #3b82f6; outline: none; }
+        button { width: 100%; padding: 12px 0; background: linear-gradient(90deg,#6366f1 0%,#3b82f6 100%); color: white; border: none; border-radius: 8px; font-size: 1.08em; font-weight: 600; cursor: pointer; margin-top: 8px; box-shadow: 0 2px 8px rgba(59,130,246,0.10); transition: background 0.2s; }
+        button:hover { background: linear-gradient(90deg,#3b82f6 0%,#6366f1 100%); }
+        .flash-messages { color: #dc2626; list-style: none; padding: 0; margin-bottom: 12px; width: 100%; text-align: center; }
+        .login-link { margin-top: 18px; color: #1e3a8a; font-size: 1em; }
+        .login-link a { color: #3b82f6; text-decoration: none; font-weight: 500; }
+        .login-link a:hover { text-decoration: underline; }
+        @media (max-width: 600px) { .register-card { padding: 24px 8px 18px 8px; } }
+    </style>
+</head>
+<body>
+    <div class="bg-overlay"></div>
+    <main>
+        <div class="register-card">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        <h1>Instructor Registration</h1>
+        <form method="POST" class="form-container" enctype="multipart/form-data" action="/register_instructor">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label>Full Name:
+                    <input type="text" name="full_name" required autocomplete="name">
+                </label>
+                <label>Email:
+                    <input type="email" name="email" required autocomplete="email">
+                </label>
+                <label>Phone:
+                    <input type="tel" name="phone" required autocomplete="tel">
+                </label>
+                <label>Institution:
+                    <input type="text" name="institution" required>
+                </label>
+                <label>Username:
+                    <input type="text" name="username" required autocomplete="username">
+                </label>
+                <label>Password:
+                    <input type="password" name="password" required autocomplete="new-password">
+                </label>
+                <label>Payment Screenshot (required):
+                    <input type="file" name="payment_screenshot" accept="image/*" required>
+                </label>
+            <div style="font-size:0.95em;color:#374151;margin-bottom:10px;">You must upload a screenshot of your payment for instructor subscription. Your registration will be reviewed by an admin.</div>
+            <button type="submit">Register as Instructor</button>
+        </form>
+            <div class="login-link">
+                Already have an account? <a href="{{ url_for('login') }}">Login</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+{% else %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnNest - Register</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: url('https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=1500&q=80') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+        }
+        .bg-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(30,41,59,0.65);
+            z-index: 0;
+        }
+        main {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+        .register-card {
+            background: rgba(255,255,255,0.97);
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(59,130,246,0.18);
+            padding: 38px 32px 28px 32px;
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .register-card h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 18px;
+            letter-spacing: 1px;
+        }
+        .form-container {
+            width: 100%;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #374151;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            margin: 6px 0 16px 0;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 1em;
+            background: #f3f4f6;
+            box-sizing: border-box;
+            transition: border 0.2s;
+        }
+        input:focus {
+            border: 1.5px solid #3b82f6;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px 0;
+            background: linear-gradient(90deg,#6366f1 0%,#3b82f6 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.08em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            box-shadow: 0 2px 8px rgba(59,130,246,0.10);
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: linear-gradient(90deg,#3b82f6 0%,#6366f1 100%);
+        }
+        .flash-messages {
+            color: #dc2626;
+            list-style: none;
+            padding: 0;
+            margin-bottom: 12px;
+            width: 100%;
+            text-align: center;
+        }
+        .login-link {
+            margin-top: 18px;
+            color: #1e3a8a;
+            font-size: 1em;
+        }
+        .login-link a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .register-card {
+                padding: 24px 8px 18px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-overlay"></div>
+    <main>
+        <div class="register-card">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        <h1>Register</h1>
+        <form method="POST" class="form-container">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label>Full Name:
+                    <input type="text" name="full_name" required autocomplete="name">
+                </label>
+                <label>Email:
+                    <input type="email" name="email" required autocomplete="email">
+                </label>
+                <label>Phone:
+                    <input type="tel" name="phone" required autocomplete="tel">
+                </label>
+                <label>Institution:
+                    <input type="text" name="institution" required>
+                </label>
+                <label>Username:
+                    <input type="text" name="username" required autocomplete="username">
+                </label>
+                <label>Password:
+                    <input type="password" name="password" required autocomplete="new-password">
+                </label>
+            <button type="submit">Register</button>
+        </form>
+            <div class="login-link">
+                Already have an account? <a href="{{ url_for('login') }}">Login</a>
+            </div>
+        </div>
+    </main>
+    <script>
+        document.querySelector('form').addEventListener('submit', function (e) {
+            const username = document.querySelector('input[name="username"]').value;
+            const password = document.querySelector('input[name="password"]').value;
+            if (username.trim() === '' || password.trim() === '') {
+                e.preventDefault();
+                alert('Username and password are required.');
+            }
+        });
+    </script>
+</body>
+</html>
+{% endif %}

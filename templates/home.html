@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnNest - Home</title>
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js');
+        });
+      }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: #4CAF50 !important;
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            color: #374151 !important;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: #4CAF50 !important;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(69, 160, 73, 0.08) 100%);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 32px 16px 24px 16px;
+            margin: 32px auto 24px auto;
+            max-width: 1000px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(30, 41, 59, 0.25);
+            z-index: 0;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #fff;
+            background: rgba(30,41,59,0.7);
+            border-radius: 10px;
+            padding: 8px 24px;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+            box-shadow: 0 2px 8px rgba(30,41,59,0.08);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.05rem;
+            color: #e0e7ef;
+            background: rgba(30,41,59,0.6);
+            border-radius: 8px;
+            padding: 6px 18px;
+            margin-bottom: 1.2rem;
+            display: inline-block;
+            box-shadow: 0 1px 4px rgba(30,41,59,0.06);
+        }
+        
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            background: rgba(255,255,255,0.85);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(76,175,80,0.07);
+            padding: 10px 18px 8px 18px;
+            min-width: 90px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-number {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #4CAF50;
+            margin-bottom: 2px;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .main-container {
+            max-width: 100vw;
+            margin: 32px 0 0 0;
+            padding: 0 0;
+        }
+        
+        .section-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(16px);
+            border-radius: 18px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            margin-bottom: 18px;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            padding: 18px 18px 12px 18px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+        
+        .section-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(30,41,59,0.08);
+            opacity: 0.2;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .section-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .section-content {
+            padding: 18px 18px 8px 18px;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+        }
+        
+        .alert-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #78350f;
+            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.13);
+        }
+        
+        .alert-info {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: #0369a1;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.13);
+        }
+        
+        .course-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 14px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .course-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10);
+        }
+        
+        .course-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 12px 16px 8px 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .course-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        
+        .course-description {
+            color: #64748b;
+            margin-bottom: 8px;
+            font-size: 0.97rem;
+        }
+        
+        .course-creator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .creator-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 0 6px rgba(76, 175, 80, 0.13);
+        }
+        
+        .creator-name {
+            font-weight: 500;
+            color: #4CAF50;
+            font-size: 0.98rem;
+        }
+        
+        .course-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            border-radius: 7px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.88rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.18);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.18);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(6, 182, 212, 0.18);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.18);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #475569 0%, #334155 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(100, 116, 139, 0.18);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.18);
+        }
+        
+        .assignment-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+            border-left: 4px solid;
+            transition: transform 0.2s ease;
+        }
+        
+        .assignment-card:hover {
+            transform: translateY(-1px);
+        }
+        
+        .assignment-card.upcoming {
+            border-left-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+        }
+        
+        .assignment-card.overdue {
+            border-left-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+        
+        .assignment-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 1rem;
+        }
+        
+        .assignment-date {
+            color: #64748b;
+            font-size: 0.88rem;
+        }
+        
+        .badge {
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .badge-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .badge-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px 10px;
+            color: #64748b;
+        }
+        
+        .empty-state i {
+            font-size: 2.5rem;
+            color: #cbd5e1;
+            margin-bottom: 10px;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 4px;
+            color: #374151;
+        }
+        
+        .empty-state p {
+            margin: 0;
+            font-size: 0.93rem;
+        }
+        
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 18px 0;
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+        }
+        
+        .footer a {
+            color: white;
+            margin: 0 8px;
+            font-size: 1.1rem;
+            transition: color 0.3s ease;
+        }
+        
+        .footer a:hover {
+            color: #4CAF50;
+        }
+        
+        #toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.18);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+        
+        #toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 18px 4px 12px 4px;
+                margin: 12px auto 10px auto;
+            }
+            .hero-title {
+                font-size: 1.3rem;
+                padding: 6px 10px;
+            }
+            .hero-subtitle {
+                font-size: 0.95rem;
+                padding: 4px 8px;
+            }
+            .hero-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .main-container {
+                padding: 0 2px;
+            }
+            .course-actions {
+                flex-direction: column;
+            }
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+    <script>
+        const socket = io();
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'show';
+            setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 3500);
+        }
+        socket.on('new_notification', function(data) {
+            showToast('🔔 ' + data.message);
+            setTimeout(() => { location.reload(); }, 2000);
+        });
+        function confirmDeletion(event) {
+            if (!confirm('Are you sure you want to delete this course? This will also delete all associated files, enrollments, threads, posts, progress, and notes.')) {
+                event.preventDefault();
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="toast"></div>
+    
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="LearnNest Logo">
+                LearnNest
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/user_directory"><i class="fa fa-users"></i> Users</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/leaderboard"><i class="fa fa-trophy"></i> Leaderboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/notifications"><i class="fa fa-bell"></i> Notifications</a></li>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.role == 'creator' %}
+                            <li class="nav-item"><a class="nav-link" href="/create_course"><i class="fa fa-plus"></i> Create Course</a></li>
+                        {% endif %}
+                        <li class="nav-item"><a class="nav-link" href="/logout"><i class="fa fa-sign-out-alt"></i> Logout</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/profile"><img src="/{{ current_user.avatar if current_user.avatar else 'static/default_avatar.png' }}" alt="avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;"> {{ current_user.username }}</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="/login"><i class="fa fa-sign-in-alt"></i> Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/register"><i class="fa fa-user-plus"></i> Register</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="row">
+            <div class="col-lg-6">
+                {% if current_user.is_authenticated %}
+                    {% if upcoming_assignments or overdue_assignments %}
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i class="fas fa-exclamation-circle"></i> Important Notifications
+                                </div>
+                                <div class="section-subtitle">
+                                    Stay on top of your assignments and deadlines
+                                </div>
+                            </div>
+                            <div class="section-content">
+                                <div class="alert alert-warning">
+                                    <strong><i class="fa fa-exclamation-circle"></i> Assignment Reminders:</strong>
+                                    <ul class="mb-0" style="margin-top: 12px;">
+                                        {% for a in upcoming_assignments %}
+                                            {% if not a.submitted %}
+                                                <li style="margin-bottom: 8px;">Assignment <b>{{ a.name }}</b> (due {{ a.due_date }}) in one of your courses is due soon. 
+                                                    <a href="{{ url_for('submit_assignment_new', course_id=a.course_id, assignment_id=a.assignment_id) }}" class="btn btn-success btn-sm">Submit now</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% for a in overdue_assignments %}
+                                            {% if not a.submitted %}
+                                                <li class="text-danger" style="margin-bottom: 8px;">Assignment <b>{{ a.name }}</b> (was due {{ a.due_date }}) is overdue! 
+                                                    <a href="{{ url_for('submit_assignment_new', course_id=a.course_id, assignment_id=a.assignment_id) }}" class="btn btn-danger btn-sm">Submit now</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if upcoming_assignments %}
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i class="fas fa-clock"></i> Upcoming Assignments
+                                </div>
+                                <div class="section-subtitle">
+                                    Stay ahead of your deadlines
+                                </div>
+                            </div>
+                            <div class="section-content">
+                                <div class="row">
+                                    {% for a in upcoming_assignments %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="assignment-card upcoming">
+                                                <div class="assignment-title">
+                                                    <i class="fa fa-tasks text-success"></i> {{ a.name }}
+                                                </div>
+                                                <div class="assignment-date">Due: <b>{{ a.due_date }}</b></div>
+                                                {% if a.submitted %}
+                                                    <span class="badge badge-success">Submitted</span>
+                                                {% else %}
+                                                    <a href="{{ url_for('submit_assignment_new', course_id=a.course_id, assignment_id=a.assignment_id) }}" class="btn btn-success btn-sm">Submit</a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if overdue_assignments %}
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i class="fas fa-exclamation-triangle"></i> Overdue Assignments
+                                </div>
+                                <div class="section-subtitle">
+                                    Please submit these assignments as soon as possible
+                                </div>
+                            </div>
+                            <div class="section-content">
+                                <div class="row">
+                                    {% for a in overdue_assignments %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="assignment-card overdue">
+                                                <div class="assignment-title">
+                                                    <i class="fa fa-exclamation-triangle text-danger"></i> {{ a.name }}
+                                                </div>
+                                                <div class="assignment-date">Was due: <b>{{ a.due_date }}</b></div>
+                                                {% if a.submitted %}
+                                                    <span class="badge badge-success">Submitted</span>
+                                                {% else %}
+                                                    <span class="badge badge-danger">Overdue</span>
+                                                    <a href="{{ url_for('submit_assignment_new', course_id=a.course_id, assignment_id=a.assignment_id) }}" class="btn btn-danger btn-sm">Submit</a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="col-lg-6">
+                <!-- Courses Section -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-book"></i> Available Courses
+                        </div>
+                        <div class="section-subtitle">
+                            Explore our collection of interactive learning experiences
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        {% if courses %}
+                            <div class="row">
+                                {% for course in courses %}
+                                    <div class="col-12 mb-4">
+                                        <div class="course-card">
+                                            <div class="course-header">
+                                                <div class="course-title">
+                                                    <i class="fa fa-book text-primary"></i> {{ course[1] }}
+                                                </div>
+                                                <div class="course-description">{{ course[2] }}</div>
+                                                {% set creator = course_creators[course[0]] %}
+                                                <div class="course-creator">
+                                                    <img src="/{{ creator['avatar'] if creator['avatar'] else 'static/default_avatar.png' }}" alt="creator avatar" class="creator-avatar">
+                                                    <span class="creator-name">{{ creator['display_name'] or creator['username'] }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="course-actions">
+                                                <a href="{{ url_for('course_overview', course_id=course[0]) }}" class="btn btn-primary">
+                                                    <i class="fa fa-eye"></i> Overview
+                                                </a>
+                                                <a href="{{ url_for('forum', course_id=course[0]) }}" class="btn btn-secondary">
+                                                    <i class="fa fa-comments"></i> Forum
+                                                </a>
+                                                <a href="{{ url_for('resources', course_id=course[0]) }}" class="btn btn-info">
+                                                    <i class="fa fa-folder-open"></i> Resources
+                                                </a>
+                                                <a href="{{ url_for('enroll', course_id=course[0]) }}" class="btn btn-success">
+                                                    <i class="fa fa-user-plus"></i> Enroll
+                                                </a>
+                                                {% if current_user.is_authenticated %}
+                                                    {% if current_user.role == 'creator' or course[0] in enrolled_courses %}
+                                                        <a href="{{ url_for('progress', course_id=course[0]) }}" class="btn btn-info">
+                                                            <i class="fa fa-chart-line"></i> Progress
+                                                        </a>
+                                                        <a href="{{ url_for('notes', course_id=course[0]) }}" class="btn btn-warning">
+                                                            <i class="fa fa-sticky-note"></i> Notes
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if current_user.role == 'creator' and course[0] in creator_courses %}
+                                                        <a href="{{ url_for('students', course_id=course[0]) }}" class="btn btn-secondary">
+                                                            <i class="fa fa-users"></i> Students
+                                                        </a>
+                                                        <a href="{{ url_for('edit_course', course_id=course[0]) }}" class="btn btn-secondary">
+                                                            <i class="fa fa-edit"></i> Edit
+                                                        </a>
+                                                        <form method="POST" action="{{ url_for('delete_course', course_id=course[0]) }}" style="display:inline;" onsubmit="return confirmDeletion(event)">
+                                                            <button type="submit" class="btn btn-danger">
+                                                                <i class="fa fa-trash"></i> Delete
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                {% endif %}
+                                                {% if course[4] %}
+                                                    <a href="{{ course[4] }}" class="btn btn-info" target="_blank">
+                                                        <i class="fa fa-video"></i> Join Live Session
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-book"></i>
+                                <h3>No courses available</h3>
+                                <p>Check back later for new learning opportunities!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div>
+            <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
+            <a href="https://facebook.com/" target="_blank"><i class="fab fa-facebook"></i></a>
+            <a href="https://linkedin.com/" target="_blank"><i class="fab fa-linkedin"></i></a>
+            <a href="https://github.com/" target="_blank"><i class="fab fa-github"></i></a>
+        </div>
+        <div class="mt-2">&copy; {{ 2025 }} LearnNest. All rights reserved.</div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
