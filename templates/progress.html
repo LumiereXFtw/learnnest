@@ -307,10 +307,42 @@
                 event.preventDefault();
             }
         }
+        // Track form submissions to prevent rapid submissions
+        let isSubmitting = false;
+        
         function confirmEdit(event) {
+            if (isSubmitting) {
+                event.preventDefault();
+                showToast('Please wait, updating progress...');
+                return;
+            }
+            
             if (!confirm('Are you sure you want to update this progress?')) {
                 event.preventDefault();
+                return;
             }
+            
+            // Prevent rapid submissions
+            isSubmitting = true;
+            const form = event.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            // Show loading state
+            submitBtn.textContent = 'Updating...';
+            submitBtn.disabled = true;
+            
+            // Add a small delay to prevent database conflicts
+            setTimeout(function() {
+                form.submit();
+            }, 100);
+            
+            // Reset after 3 seconds in case of errors
+            setTimeout(function() {
+                isSubmitting = false;
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }, 3000);
         }
         function copyMeetingLink(link, btn) {
             navigator.clipboard.writeText(link).then(function() {

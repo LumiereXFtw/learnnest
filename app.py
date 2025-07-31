@@ -94,6 +94,13 @@ if not os.path.exists(app.config['ASSIGNMENT_UPLOAD_FOLDER']):
 def init_db():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
+    
+    # Set up WAL mode for better concurrency
+    c.execute('PRAGMA journal_mode=WAL')
+    c.execute('PRAGMA synchronous=NORMAL')
+    c.execute('PRAGMA cache_size=10000')
+    c.execute('PRAGMA temp_store=MEMORY')
+    
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT, role TEXT, avatar TEXT, is_approved INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, display_name TEXT, bio TEXT, notif_forum INTEGER DEFAULT 1, notif_grades INTEGER DEFAULT 1, notif_announcements INTEGER DEFAULT 1, dark_mode INTEGER DEFAULT 0, badges TEXT, points INTEGER DEFAULT 0, api_token TEXT, is_blocked INTEGER DEFAULT 0, full_name TEXT, email TEXT, phone TEXT, institution TEXT, payment_screenshot TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS courses
@@ -1274,56 +1281,84 @@ def export_students(course_id):
 @app.route('/course/<int:course_id>/progress')
 @login_required
 def progress(course_id):
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute('SELECT title, creator_id, reference_file_path FROM courses WHERE id = ?', (course_id,))
-    course_data = c.fetchone()
-    if not course_data:
-        conn.close()
-        flash('Course not found.')
-        return redirect(url_for('home'))
-    course_title = course_data[0]
-    creator_id = course_data[1]
-    reference_file = os.path.basename(course_data[2]) if course_data[2] else None
-    c.execute('SELECT avatar, display_name FROM users WHERE id = ?', (creator_id,))
-    creator_info = c.fetchone()
-    creator_avatar = creator_info[0] if creator_info and creator_info[0] else DEFAULT_AVATAR
-    creator_display_name = creator_info[1] if creator_info and creator_info[1] else 'Course Creator'
-    c.execute('SELECT enrollment_number FROM enrollments WHERE user_id = ? AND course_id = ?',
-              (current_user.id, course_id))
-    enrollment = c.fetchone()
-    if not enrollment and current_user.role != 'creator':
-        conn.close()
-        flash('You must be enrolled or be the creator to view progress.')
-        return redirect(url_for('home'))
-    if current_user.role == 'creator':
-        c.execute('''SELECT p.id, u.username, p.assignment_name, p.status, p.grade, p.file_path, p.ai_grade, u.avatar, u.display_name
-                     FROM progress p JOIN users u ON p.user_id = u.id
-                     WHERE p.course_id = ?''', (course_id,))
-        progress_data = c.fetchall()
-    else:
-        c.execute('''SELECT p.id, u.username, p.assignment_name, p.status, p.grade, p.file_path, p.ai_grade, u.avatar, u.display_name
-                     FROM progress p JOIN users u ON p.user_id = u.id
-                     WHERE p.course_id = ? AND p.user_id = ?''', (course_id, current_user.id))
-        progress_data = c.fetchall()
-    is_creator = current_user.role == 'creator' and creator_id == current_user.id
-    # Fetch assignments for this course, with due_date and sort
-    c.execute('SELECT id, name, type, due_date FROM assignments WHERE course_id = ? ORDER BY due_date ASC', (course_id,))
-    assignments = [{'id': row[0], 'name': row[1], 'type': row[2], 'due_date': row[3]} for row in c.fetchall()]
-    # Fetch student progress for assignment status
-    assignment_status = {}
-    if not is_creator:
+    conn = None
+    try:
+        # Use WAL mode for better concurrency
+        conn = sqlite3.connect('database.db', timeout=15.0)
+        conn.execute('PRAGMA journal_mode=WAL')
+        conn.execute('PRAGMA synchronous=NORMAL')
+        conn.execute('PRAGMA cache_size=10000')
+        conn.execute('PRAGMA temp_store=MEMORY')
+        
+        c = conn.cursor()
+        
+        c.execute('SELECT title, creator_id, reference_file_path FROM courses WHERE id = ?', (course_id,))
+        course_data = c.fetchone()
+        if not course_data:
+            flash('Course not found.')
+            return redirect(url_for('home'))
+        
+        course_title = course_data[0]
+        creator_id = course_data[1]
+        reference_file = os.path.basename(course_data[2]) if course_data[2] else None
+        
+        c.execute('SELECT avatar, display_name FROM users WHERE id = ?', (creator_id,))
+        creator_info = c.fetchone()
+        creator_avatar = creator_info[0] if creator_info and creator_info[0] else DEFAULT_AVATAR
+        creator_display_name = creator_info[1] if creator_info and creator_info[1] else 'Course Creator'
+        
+        c.execute('SELECT enrollment_number FROM enrollments WHERE user_id = ? AND course_id = ?',
+                  (current_user.id, course_id))
+        enrollment = c.fetchone()
+        if not enrollment and current_user.role != 'creator':
+            flash('You must be enrolled or be the creator to view progress.')
+            return redirect(url_for('home'))
+        
+        if current_user.role == 'creator':
+            c.execute('''SELECT p.id, u.username, p.assignment_name, p.status, p.grade, p.file_path, p.ai_grade, u.avatar, u.display_name
+                         FROM progress p JOIN users u ON p.user_id = u.id
+                         WHERE p.course_id = ?''', (course_id,))
+            progress_data = c.fetchall()
+        else:
+            c.execute('''SELECT p.id, u.username, p.assignment_name, p.status, p.grade, p.file_path, p.ai_grade, u.avatar, u.display_name
+                         FROM progress p JOIN users u ON p.user_id = u.id
+                         WHERE p.course_id = ? AND p.user_id = ?''', (course_id, current_user.id))
+            progress_data = c.fetchall()
+        
+        is_creator = current_user.role == 'creator' and creator_id == current_user.id
+        
+        # Fetch assignments for this course, with due_date and sort
+        c.execute('SELECT id, name, type, due_date FROM assignments WHERE course_id = ? ORDER BY due_date ASC', (course_id,))
+        assignments = [{'id': row[0], 'name': row[1], 'type': row[2], 'due_date': row[3]} for row in c.fetchall()]
+        
+        # Fetch student progress for assignment status
+        assignment_status = {}
+        if not is_creator:
+            for a in assignments:
+                c.execute('SELECT status FROM progress WHERE user_id = ? AND course_id = ? AND assignment_name = ?', (current_user.id, course_id, a['name']))
+                row = c.fetchone()
+                assignment_status[a['id']] = row[0] if row else 'Not Submitted'
+        
+        # For each assignment, get latest AI feedback for this user
         for a in assignments:
-            c.execute('SELECT status FROM progress WHERE user_id = ? AND course_id = ? AND assignment_name = ?', (current_user.id, course_id, a['name']))
+            c.execute('SELECT ai_grade FROM progress WHERE user_id=? AND course_id=? AND assignment_name=? ORDER BY id DESC LIMIT 1', (current_user.id, course_id, a['name']))
             row = c.fetchone()
-            assignment_status[a['id']] = row[0] if row else 'Not Submitted'
-    # For each assignment, get latest AI feedback for this user
-    for a in assignments:
-        c.execute('SELECT ai_grade FROM progress WHERE user_id=? AND course_id=? AND assignment_name=? ORDER BY id DESC LIMIT 1', (current_user.id, course_id, a['name']))
-        row = c.fetchone()
-        a['ai_feedback'] = row[0] if row and row[0] else None
-    conn.close()
-    return render_template('progress.html', course_id=course_id, course_title=course_title, progress_data=progress_data, is_creator=is_creator, is_enrolled=bool(enrollment), reference_file=reference_file, assignments=assignments, assignment_status=assignment_status, creator_avatar=creator_avatar, creator_display_name=creator_display_name)
+            a['ai_feedback'] = row[0] if row and row[0] else None
+        
+        return render_template('progress.html', course_id=course_id, course_title=course_title, progress_data=progress_data, is_creator=is_creator, is_enrolled=bool(enrollment), reference_file=reference_file, assignments=assignments, assignment_status=assignment_status, creator_avatar=creator_avatar, creator_display_name=creator_display_name)
+        
+    except sqlite3.OperationalError as e:
+        if "database is locked" in str(e):
+            flash('Database is temporarily busy. Please refresh the page in a moment.')
+        else:
+            flash('Database error occurred. Please try again.')
+        return redirect(url_for('home'))
+    except Exception as e:
+        flash('An error occurred while loading progress. Please try again.')
+        return redirect(url_for('home'))
+    finally:
+        if conn:
+            conn.close()
 
 @app.route('/course/<int:course_id>/progress/submit', methods=['POST'])
 @login_required
@@ -1422,59 +1457,123 @@ def edit_progress(course_id, progress_id):
     if current_user.role != 'creator':
         flash('Only creators can edit progress.')
         return redirect(url_for('home'))
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute('SELECT id, creator_id FROM courses WHERE id = ?', (course_id,))
-    course = c.fetchone()
-    if not course:
-        conn.close()
-        flash('Course not found.')
-        return redirect(url_for('home'))
-    if course[1] != current_user.id:
-        conn.close()
-        flash('You are not the creator of this course.')
-        return redirect(url_for('progress', course_id=course_id))
-    c.execute('SELECT id FROM progress WHERE id = ? AND course_id = ?', (progress_id, course_id))
-    progress = c.fetchone()
-    if not progress:
-        conn.close()
-        flash('Progress record not found.')
-        return redirect(url_for('progress', course_id=course_id))
-    status = request.form.get('status')
-    grade = request.form.get('grade')
-    if status not in ['submitted', 'completed', 'incomplete']:
-        conn.close()
-        flash('Invalid status.')
-        return redirect(url_for('progress', course_id=course_id))
-    if grade:
+    
+    # Use a simple retry mechanism for database operations
+    import time
+    import sqlite3
+    
+    max_retries = 3
+    retry_delay = 0.5
+    
+    for attempt in range(max_retries):
+        conn = None
         try:
-            grade = int(grade)
-            if not 0 <= grade <= 100:
-                conn.close()
-                flash('Grade must be between 0 and 100.')
+            # Connect with immediate mode to avoid locks
+            conn = sqlite3.connect('database.db', timeout=30.0, isolation_level=None)
+            conn.execute('PRAGMA journal_mode=WAL')  # Use WAL mode for better concurrency
+            conn.execute('PRAGMA synchronous=NORMAL')
+            conn.execute('PRAGMA cache_size=10000')
+            conn.execute('PRAGMA temp_store=MEMORY')
+            
+            c = conn.cursor()
+            
+            # Get course information
+            c.execute('SELECT id, creator_id FROM courses WHERE id = ?', (course_id,))
+            course = c.fetchone()
+            if not course:
+                flash('Course not found.')
+                return redirect(url_for('home'))
+            if course[1] != current_user.id:
+                flash('You are not the creator of this course.')
                 return redirect(url_for('progress', course_id=course_id))
-        except ValueError:
-            conn.close()
-            flash('Grade must be a number.')
+            
+            # Check if progress record exists
+            c.execute('SELECT id FROM progress WHERE id = ? AND course_id = ?', (progress_id, course_id))
+            progress = c.fetchone()
+            if not progress:
+                flash('Progress record not found.')
+                return redirect(url_for('progress', course_id=course_id))
+            
+            # Validate form data
+            status = request.form.get('status')
+            grade = request.form.get('grade')
+            if status not in ['submitted', 'completed', 'incomplete']:
+                flash('Invalid status.')
+                return redirect(url_for('progress', course_id=course_id))
+            
+            if grade:
+                try:
+                    grade = int(grade)
+                    if not 0 <= grade <= 100:
+                        flash('Grade must be between 0 and 100.')
+                        return redirect(url_for('progress', course_id=course_id))
+                except ValueError:
+                    flash('Grade must be a number.')
+                    return redirect(url_for('progress', course_id=course_id))
+            else:
+                grade = None
+            
+            # Start transaction
+            conn.execute('BEGIN IMMEDIATE')
+            
+            # Update progress
+            c.execute('UPDATE progress SET status = ?, grade = ? WHERE id = ?', (status, grade, progress_id))
+            
+            # Get student information for notification
+            c.execute('SELECT user_id FROM progress WHERE id = ?', (progress_id,))
+            student_row = c.fetchone()
+            if not student_row:
+                conn.rollback()
+                flash('Student not found for this progress record.')
+                return redirect(url_for('progress', course_id=course_id))
+            
+            student_id = student_row[0]
+            c.execute('SELECT title FROM courses WHERE id = ?', (course_id,))
+            course_title_row = c.fetchone()
+            course_title = course_title_row[0] if course_title_row else 'Unknown Course'
+            
+            # Commit transaction
+            conn.commit()
+            
+            # Create notification (outside transaction to avoid locks)
+            try:
+                create_notification(student_id, f'Your assignment grade was updated in {course_title}', url_for('progress', course_id=course_id), 'grades')
+            except:
+                pass  # Don't fail if notification creation fails
+            
+            flash('Progress updated successfully!')
             return redirect(url_for('progress', course_id=course_id))
-    else:
-        grade = None
-    c.execute('UPDATE progress SET status = ?, grade = ? WHERE id = ?', (status, grade, progress_id))
-    # Notify student of grade update
-    c.execute('SELECT user_id FROM progress WHERE id = ?', (progress_id,))
-    student_row = c.fetchone()
-    if not student_row:
-        conn.close()
-        flash('Student not found for this progress record.')
-        return redirect(url_for('progress', course_id=course_id))
-    student_id = student_row[0]
-    c.execute('SELECT title FROM courses WHERE id = ?', (course_id,))
-    course_title_row = c.fetchone()
-    course_title = course_title_row[0] if course_title_row else 'Unknown Course'
-    create_notification(student_id, f'Your assignment grade was updated in {course_title}', url_for('progress', course_id=course_id), 'grades')
-    conn.commit()
-    conn.close()
-    flash('Progress updated successfully!')
+            
+        except sqlite3.OperationalError as e:
+            if conn:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+            conn.close()
+            
+            if "database is locked" in str(e) and attempt < max_retries - 1:
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+                continue
+            else:
+                flash('Database is temporarily busy. Please try again in a moment.')
+                return redirect(url_for('progress', course_id=course_id))
+                
+        except Exception as e:
+            if conn:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+            conn.close()
+            flash('An error occurred while updating progress. Please try again.')
+            return redirect(url_for('progress', course_id=course_id))
+        finally:
+            if conn:
+                conn.close()
+    
+    flash('Database is temporarily busy. Please try again in a moment.')
     return redirect(url_for('progress', course_id=course_id))
 
 @app.route('/course/<int:course_id>/notes', methods=['GET', 'POST'])
