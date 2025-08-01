@@ -5,6 +5,7 @@ A comprehensive Learning Management System built with Flask, featuring AI-powere
 ## 🚀 Key Features
 
 ### 👥 **User Management & Access Control**
+
 - **Multi-Role System**: Admin, Creator/Instructor, and Student roles
 - **Admin Controls**: Full platform oversight with instructor approval and blocking capabilities
 - **Instructor Management**: Payment verification, approval workflow, and access control
