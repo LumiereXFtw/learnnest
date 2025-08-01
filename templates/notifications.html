@@ -42,7 +42,9 @@
 <body>
     <nav>
         <a href="/">Home</a>
-        <a href="/user_directory">User Directory</a>
+        {% if current_user.is_authenticated and current_user.role == 'admin' %}
+            <a href="/user_directory">User Directory</a>
+        {% endif %}
         <a href="/notifications" style="position:relative;">
             <span style="font-size:1.3em;">🔔</span>
             {% if unread_notifications_count and unread_notifications_count > 0 %}

@@ -368,8 +368,12 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="LearnNest Logo">
+            <a class="navbar-brand d-flex align-items-center" href="/home">
+                {% if current_user.is_authenticated and current_user.role == 'creator' and user_logo %}
+                    <img src="{{ user_logo }}" alt="LearnNest Logo" style="height:32px;margin-right:8px;">
+                {% else %}
+                    <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="LearnNest Logo" style="height:32px;margin-right:8px;">
+                {% endif %}
                 LearnNest
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -377,7 +381,9 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/user_directory"><i class="fa fa-users"></i> Users</a></li>
+                    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                        <li class="nav-item"><a class="nav-link" href="/user_directory"><i class="fa fa-users"></i> Users</a></li>
+                    {% endif %}
                     <li class="nav-item"><a class="nav-link" href="/leaderboard"><i class="fa fa-trophy"></i> Leaderboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="/notifications"><i class="fa fa-bell"></i> Notifications</a></li>
                     {% if current_user.is_authenticated %}
@@ -487,6 +493,36 @@
                             <label for="bio" class="form-label">Bio</label>
                             <textarea id="bio" name="bio" rows="4" class="form-control" placeholder="Tell us about yourself...">{{ bio }}</textarea>
                         </div>
+                        
+                        {% if role == 'creator' %}
+                        <div class="form-group">
+                            <label for="logo" class="form-label">
+                                <i class="fas fa-image"></i>
+                                Dashboard Logo (Optional)
+                            </label>
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e5e7eb;">
+                                {% if logo_url %}
+                                <img src="{{ logo_url }}" alt="Current Logo" style="height: 40px; border-radius: 6px; border: 2px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                {% else %}
+                                <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="Default Logo" style="height: 40px; border-radius: 6px; border: 2px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                {% endif %}
+                                <div>
+                                    <span style="color: #374151; font-size: 0.9rem; font-weight: 500;">Current logo</span>
+                                    <br>
+                                    <small style="color: #6b7280; font-size: 0.8rem;">This will appear in your dashboard navigation</small>
+                                </div>
+                            </div>
+                            <input type="file" id="logo" name="logo" accept="image/png, image/jpeg, image/jpg" class="form-control" style="padding: 8px;">
+                            <small style="color: #6b7280; font-size: 0.85rem;">Upload a logo to customize your dashboard. Recommended size: 50x50px. Max size: 2MB.</small>
+                            {% if logo_url %}
+                            <div style="margin-top: 10px;">
+                                <button type="submit" name="remove_logo" class="btn btn-danger" style="font-size: 0.85rem; padding: 6px 12px;">
+                                    <i class="fas fa-trash"></i> Remove Logo
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
 
                     <!-- Notification Settings -->

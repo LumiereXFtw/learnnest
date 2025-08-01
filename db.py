@@ -99,6 +99,8 @@ if 'badges' not in columns:
     c.execute('ALTER TABLE users ADD COLUMN badges TEXT')
 if 'api_token' not in columns:
     c.execute('ALTER TABLE users ADD COLUMN api_token TEXT')
+if 'logo' not in columns:
+    c.execute('ALTER TABLE users ADD COLUMN logo TEXT')
 
 c.execute("PRAGMA table_info(posts)")
 post_columns = [col[1] for col in c.fetchall()]

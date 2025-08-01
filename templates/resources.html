@@ -263,8 +263,12 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
       <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center" href="/home">
-          <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="LearnNest Logo">
-          LearnNest
+            {% if current_user.is_authenticated and current_user.role == 'creator' and user_logo %}
+                <img src="{{ user_logo }}" alt="LearnNest Logo" style="height:32px;margin-right:8px;">
+            {% else %}
+                <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="LearnNest Logo" style="height:32px;margin-right:8px;">
+            {% endif %}
+            LearnNest
         </a>
       </div>
     </nav>

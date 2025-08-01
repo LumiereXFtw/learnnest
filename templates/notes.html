@@ -416,7 +416,11 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="/home">
-                <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="LearnNest Logo">
+                        {% if current_user.is_authenticated and current_user.role == 'creator' and user_logo %}
+            <img src="{{ user_logo }}" alt="LearnNest Logo" style="height:32px;margin-right:8px;">
+        {% else %}
+            <img src="https://img.icons8.com/ios-filled/50/4CAF50/open-book--v2.png" alt="LearnNest Logo" style="height:32px;margin-right:8px;">
+        {% endif %}
                 LearnNest
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -424,7 +428,9 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/user_directory"><i class="fa fa-users"></i> Users</a></li>
+                    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                        <li class="nav-item"><a class="nav-link" href="/user_directory"><i class="fa fa-users"></i> Users</a></li>
+                    {% endif %}
                     <li class="nav-item"><a class="nav-link" href="/leaderboard"><i class="fa fa-trophy"></i> Leaderboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="/notifications"><i class="fa fa-bell"></i> Notifications</a></li>
                     {% if current_user.is_authenticated %}

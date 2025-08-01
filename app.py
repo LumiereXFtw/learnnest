@@ -150,6 +150,24 @@ def load_user(user_id):
         return User(user_data[0], user_data[1], user_data[2])
     return None
 
+@app.context_processor
+def inject_user_logo():
+    """Inject user logo into all templates for creators"""
+    if current_user.is_authenticated and current_user.role == 'creator':
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+        c.execute('SELECT logo FROM users WHERE id = ?', (current_user.id,))
+        result = c.fetchone()
+        conn.close()
+        if result and result[0]:
+            # Convert the stored path to a URL path for static files
+            logo_path = result[0]
+            # If the path starts with 'static/', remove it to make it a proper URL
+            if logo_path.startswith('static/'):
+                logo_path = '/' + logo_path
+            return {'user_logo': logo_path}
+    return {'user_logo': None}
+
 # Generate random enrollment number
 def generate_enrollment_number():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
@@ -2012,26 +2030,30 @@ def profile():
             c.execute(f'ALTER TABLE users ADD COLUMN {col} INTEGER DEFAULT {default}')
     conn.commit()
     if username_param:
-        c.execute('SELECT username, role, avatar, display_name, bio, notif_forum, notif_grades, notif_announcements, dark_mode FROM users WHERE username = ?', (username_param,))
+        c.execute('SELECT username, role, avatar, display_name, bio, notif_forum, notif_grades, notif_announcements, dark_mode, logo FROM users WHERE username = ?', (username_param,))
         user = c.fetchone()
         is_self = (username_param == current_user.username)
     else:
-        c.execute('SELECT username, role, avatar, display_name, bio, notif_forum, notif_grades, notif_announcements, dark_mode FROM users WHERE id = ?', (current_user.id,))
+        c.execute('SELECT username, role, avatar, display_name, bio, notif_forum, notif_grades, notif_announcements, dark_mode, logo FROM users WHERE id = ?', (current_user.id,))
         user = c.fetchone()
         is_self = True
     avatar_url = user[2] if user and user[2] else DEFAULT_AVATAR
+    logo_url = user[9] if user and user[9] else None
     notif_forum = bool(user[5]) if user else True
     notif_grades = bool(user[6]) if user else True
     notif_announcements = bool(user[7]) if user else True
     dark_mode = bool(user[8]) if user else False
     if request.method == 'POST' and is_self:
         file = request.files.get('avatar')
+        logo_file = request.files.get('logo')
         new_display_name = request.form.get('display_name', '').strip()
         new_bio = request.form.get('bio', '').strip()
         notif_forum_val = 1 if request.form.get('notif_forum') else 0
         notif_grades_val = 1 if request.form.get('notif_grades') else 0
         notif_announcements_val = 1 if request.form.get('notif_announcements') else 0
         dark_mode_val = 1 if request.form.get('dark_mode') else 0
+        
+        # Handle avatar upload
         if file and allowed_avatar(file.filename):
             filename = secure_filename(f"avatar_{current_user.id}.{file.filename.rsplit('.', 1)[1].lower()}")
             filepath = os.path.join('static', 'uploads', filename)
@@ -2039,6 +2061,42 @@ def profile():
             c.execute('UPDATE users SET avatar = ? WHERE id = ?', (filepath, current_user.id))
             conn.commit()
             flash('Avatar updated!')
+        
+        # Handle logo upload for creators
+        if logo_file and current_user.role == 'creator':
+            if logo_file.filename and logo_file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                # Check file size by reading the file content
+                logo_file.seek(0, 2)  # Seek to end
+                file_size = logo_file.tell()  # Get file size
+                logo_file.seek(0)  # Reset to beginning
+                
+                if file_size <= 2 * 1024 * 1024:  # 2MB limit
+                    filename = secure_filename(f"logo_{current_user.id}.{logo_file.filename.rsplit('.', 1)[1].lower()}")
+                    filepath = os.path.join('static', 'uploads', filename)
+                    logo_file.save(filepath)
+                    c.execute('UPDATE users SET logo = ? WHERE id = ?', (filepath, current_user.id))
+                    conn.commit()
+                    flash('Logo updated!')
+                else:
+                    flash('Logo file size must be less than 2MB.')
+            else:
+                flash('Logo must be a PNG, JPG, or JPEG file.')
+        
+        # Handle logo removal
+        if 'remove_logo' in request.form and current_user.role == 'creator':
+            c.execute('SELECT logo FROM users WHERE id = ?', (current_user.id,))
+            result = c.fetchone()
+            if result and result[0]:
+                # Delete the logo file
+                try:
+                    os.remove(result[0])
+                except OSError:
+                    pass  # File might not exist
+                # Remove from database
+                c.execute('UPDATE users SET logo = NULL WHERE id = ?', (current_user.id,))
+                conn.commit()
+                flash('Logo removed successfully!')
+        
         if new_display_name:
             c.execute('UPDATE users SET display_name = ? WHERE id = ?', (new_display_name, current_user.id))
             conn.commit()
@@ -2048,9 +2106,10 @@ def profile():
         c.execute('UPDATE users SET notif_forum = ?, notif_grades = ?, notif_announcements = ?, dark_mode = ? WHERE id = ?',
                   (notif_forum_val, notif_grades_val, notif_announcements_val, dark_mode_val, current_user.id))
         conn.commit()
-        c.execute('SELECT username, role, avatar, display_name, bio, notif_forum, notif_grades, notif_announcements, dark_mode FROM users WHERE id = ?', (current_user.id,))
+        c.execute('SELECT username, role, avatar, display_name, bio, notif_forum, notif_grades, notif_announcements, dark_mode, logo FROM users WHERE id = ?', (current_user.id,))
         user = c.fetchone()
         avatar_url = user[2] if user and user[2] else DEFAULT_AVATAR
+        logo_url = user[9] if user and user[9] else None
         notif_forum = bool(user[5])
         notif_grades = bool(user[6])
         notif_announcements = bool(user[7])
@@ -2065,7 +2124,7 @@ def profile():
     c.execute('SELECT api_token FROM users WHERE id = ?', (current_user.id,))
     api_token = c.fetchone()[0]
     conn.close()
-    return render_template('profile.html', username=user[0], role=user[1], avatar_url=avatar_url, display_name=user[3] or '', bio=user[4] or '', is_self=is_self, notif_forum=notif_forum, notif_grades=notif_grades, notif_announcements=notif_announcements, dark_mode=dark_mode, api_token=api_token)
+    return render_template('profile.html', username=user[0], role=user[1], avatar_url=avatar_url, logo_url=logo_url, display_name=user[3] or '', bio=user[4] or '', is_self=is_self, notif_forum=notif_forum, notif_grades=notif_grades, notif_announcements=notif_announcements, dark_mode=dark_mode, api_token=api_token)
 
 @app.route('/course/<int:course_id>/announce', methods=['GET', 'POST'])
 @login_required
