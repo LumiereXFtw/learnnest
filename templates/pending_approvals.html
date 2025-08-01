@@ -413,11 +413,13 @@
                                     <td>
                                         <div class="action-buttons">
                                             <form method="POST" action="{{ url_for('approve_user', user_id=user[0]) }}" style="display:inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button type="submit" class="btn-approve">
                                                     <i class="fas fa-check"></i> Approve
                                                 </button>
                                             </form>
                                             <form method="POST" action="{{ url_for('reject_user', user_id=user[0]) }}" style="display:inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button type="submit" class="btn-reject">
                                                     <i class="fas fa-times"></i> Reject
                                                 </button>

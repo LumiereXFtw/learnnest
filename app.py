@@ -296,7 +296,13 @@ def home():
 def home_dashboard():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute('SELECT id, title, description, creator_id, meeting_link FROM courses')
+    # Only fetch courses from non-blocked instructors
+    c.execute('''
+        SELECT c.id, c.title, c.description, c.creator_id, c.meeting_link 
+        FROM courses c 
+        JOIN users u ON c.creator_id = u.id 
+        WHERE u.is_blocked = 0 OR u.is_blocked IS NULL
+    ''')
     courses = c.fetchall()
     enrolled_courses = []
     creator_courses = []
@@ -385,10 +391,15 @@ def login():
         password = request.form['password']
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
-        c.execute('SELECT id, username, password, role, is_approved FROM users WHERE username = ?', (username,))
+        c.execute('SELECT id, username, password, role, is_approved, is_blocked FROM users WHERE username = ?', (username,))
         user_data = c.fetchone()
         conn.close()
         if user_data and check_password_hash(user_data[2], password):
+            # Check if user is blocked
+            if user_data[5] == 1:
+                flash('Your account has been blocked by the administrator. Please contact support.')
+                return render_template('login.html')
+            # Check if user is approved
             if user_data[4] != 1:
                 flash('Your account is pending admin approval.')
                 return render_template('pending_approval.html')
@@ -2014,6 +2025,23 @@ def api_token_required(f):
             return {'error': 'Invalid API token'}, 401
         return f(*args, **kwargs)
     return decorated
+
+def not_blocked_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.is_authenticated:
+            conn = sqlite3.connect('database.db')
+            c = conn.cursor()
+            c.execute('SELECT is_blocked FROM users WHERE id = ?', (current_user.id,))
+            result = c.fetchone()
+            conn.close()
+            
+            if result and result[0] == 1:
+                logout_user()
+                flash('Your account has been blocked by the administrator. Please contact support.')
+                return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required

@@ -280,12 +280,14 @@
                         <td>
                                                     {% if instructor[4] %}
                                                         <form method="POST" action="{{ url_for('unblock_user', user_id=instructor[0]) }}" style="display: inline;">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                             <button type="submit" class="btn btn-success btn-sm">
                                                                 <i class="fa fa-unlock"></i> Unblock
                                                             </button>
                             </form>
                                                     {% else %}
                                                         <form method="POST" action="{{ url_for('block_user', user_id=instructor[0]) }}" style="display: inline;">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                             <button type="submit" class="btn btn-danger btn-sm">
                                                                 <i class="fa fa-ban"></i> Block
                                                             </button>

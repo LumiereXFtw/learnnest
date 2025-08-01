@@ -503,11 +503,13 @@
                                         <div class="action-buttons">
                                             {% if enrollment[3] == 0 %}
                                                 <form method="post" action="{{ url_for('approve_enrollment', enrollment_id=enrollment[0]) }}" style="display:inline;">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <button type="submit" class="btn-approve" title="Approve this student">
                                                         <i class="fas fa-check"></i> Approve
                                                     </button>
                                                 </form>
                                                 <form method="post" action="{{ url_for('reject_enrollment', enrollment_id=enrollment[0]) }}" style="display:inline;">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <button type="submit" class="btn-reject" title="Reject this student">
                                                         <i class="fas fa-times"></i> Reject
                                                     </button>
@@ -515,12 +517,14 @@
                                             {% endif %}
                                             
                                             <form method="post" action="{{ url_for('block_student', user_id=user_id) }}" style="display:inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button type="submit" class="btn-block {% if is_blocked %}btn-disabled{% endif %}" 
                                                         title="Block this student" {% if is_blocked %}disabled{% endif %}>
                                                     <i class="fas fa-ban"></i> Block
                                                 </button>
                                             </form>
                                             <form method="post" action="{{ url_for('unblock_student', user_id=user_id) }}" style="display:inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button type="submit" class="btn-unblock {% if not is_blocked %}btn-disabled{% endif %}" 
                                                         title="Unblock this student" {% if not is_blocked %}disabled{% endif %}>
                                                     <i class="fas fa-unlock"></i> Unblock
