@@ -225,4 +225,5 @@ This project is designed for educational and commercial use in learning manageme
 
 ---
 
-**LearnNest** - Empowering Education Through Technology 
+**LearnNest** - Empowering Education Through Technology #   l e a r n n e s t _ e n h a n c e d  
+ 
